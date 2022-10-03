@@ -13,6 +13,9 @@ Style/StringLiteralsInInterpolation:
 Layout/LineLength:
   Max: 120
 
+RSpec/BeNil:
+  EnforcedStyle: be
+
 require:
   - rubocop-rspec
   - rubocop-rake
