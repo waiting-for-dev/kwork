@@ -10,11 +10,21 @@ Style/StringLiteralsInInterpolation:
   Enabled: true
   EnforcedStyle: double_quotes
 
+Style/SingleLineMethods:
+  Exclude:
+    - spec/**/*
+
+Style/LambdaCall:
+  EnforcedStyle: braces
+
 Layout/LineLength:
   Max: 120
 
 RSpec/BeNil:
   EnforcedStyle: be
+
+RSpec/ExampleLength:
+  Enabled: false
 
 require:
   - rubocop-rspec
