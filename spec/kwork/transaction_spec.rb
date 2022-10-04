@@ -5,16 +5,22 @@ require "kwork/transaction"
 require "spec_helper"
 
 RSpec.describe Kwork::Transaction do
+  def build(klass: described_class, **operations)
+    klass.new(operations: operations)
+  end
+
+  def success(value)
+    Kwork::Result.pure(value)
+  end
+
   describe "#transaction" do
     it "chains operations" do
-      transaction = described_class.new(
-        operations: {
-          add_one: ->(x) { Kwork::Result.pure(x + 1) },
-          add_two: ->(x) { Kwork::Result.pure(x + 2) }
-        }
+      instance = build(
+        add_one: ->(x) { success(x + 1) },
+        add_two: ->(x) { success(x + 2) }
       )
 
-      result = transaction.transaction do |e|
+      result = instance.transaction do |e|
         two = e.add_one(1)
         e.add_two(two)
       end
@@ -23,8 +29,8 @@ RSpec.describe Kwork::Transaction do
     end
   end
 
-  describe "including method missing behavior" do
-    it "doesn't need to delegate to the executor" do
+  describe ".with_delegation" do
+    it "can delegate from the transaction instance" do
       klass = Class.new(described_class) do
         def call
           transaction do
@@ -33,15 +39,14 @@ RSpec.describe Kwork::Transaction do
           end
         end
       end
-      klass.with_method_missing
-      transaction = klass.new(
-        operations: {
-          add_one: ->(x) { Kwork::Result.pure(x + 1) },
-          add_two: ->(x) { Kwork::Result.pure(x + 2) }
-        }
+      klass.with_delegation
+      instance = build(
+        add_one: ->(x) { success(x + 1) },
+        add_two: ->(x) { success(x + 2) },
+        klass: klass
       )
 
-      expect(transaction.().value!).to be(4)
+      expect(instance.().value!).to be(4)
     end
   end
 end

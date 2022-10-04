@@ -6,7 +6,7 @@ require "kwork/result_adapter"
 module Kwork
   # Base class to define business transactions
   class Transaction
-    def self.with_method_missing
+    def self.with_delegation
       include(MethodMissing)
     end
 
