@@ -45,6 +45,21 @@ RSpec.describe Kwork::Transaction do
 
       expect(result.error!).to be(:error)
     end
+
+    it "can intersperse operations that doesn't return a result" do
+      instance = build(
+        add_one: ->(x) { success(x + 1) },
+        add_two: ->(x) { success(x + 2) }
+      )
+
+      result = instance.transaction do |e|
+        x = e.add_one(1)
+        y = x + 1
+        e.add_two(y)
+      end
+
+      expect(result.value!).to be(5)
+    end
   end
 
   describe ".with_delegation" do
