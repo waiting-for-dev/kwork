@@ -60,6 +60,18 @@ RSpec.describe Kwork::Transaction do
 
       expect(result.value!).to be(5)
     end
+
+    it "accepts anything responding to call as operation" do
+      instance = build(
+        add_one: ->(x) { success(x + 1) }.method(:call)
+      )
+
+      result = instance.transaction do |e|
+        e.add_one(1)
+      end
+
+      expect(result.value!).to be(2)
+    end
   end
 
   describe ".with_delegation" do
