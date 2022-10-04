@@ -74,6 +74,31 @@ RSpec.describe Kwork::Transaction do
     end
   end
 
+  describe "#with" do
+    it "returns new instance" do
+      instance = build(
+        add: ->(x) { success(x + 1) }
+      )
+
+      new_instance = instance.with(add: -> {})
+
+      expect(instance).not_to be(new_instance)
+    end
+
+    it "replaces operations" do
+      instance = build(
+        add: ->(x) { success(x + 1) }
+      )
+
+      new_instance = instance.with(add: ->(x) { success(x + 2) })
+
+      result = new_instance.transaction do |e|
+        e.add(1)
+      end
+      expect(result.value!).to be(3)
+    end
+  end
+
   describe ".with_delegation" do
     it "can delegate from the transaction instance" do
       klass = Class.new(described_class) do

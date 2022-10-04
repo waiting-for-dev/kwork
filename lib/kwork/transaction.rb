@@ -28,6 +28,16 @@ module Kwork
       end
     end
 
+    def with(**operations)
+      new_operations = @operations.merge(operations)
+
+      self.class.new(
+        operations: new_operations,
+        adapter: @adapter,
+        executor: Executor.new(methods: new_operations, adapter: @adapter)
+      )
+    end
+
     # Avoids the need to call from the executor
     module MethodMissing
       def method_missing(name, *args, **kwargs)
