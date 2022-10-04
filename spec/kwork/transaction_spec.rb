@@ -39,8 +39,8 @@ RSpec.describe Kwork::Transaction do
       )
 
       result = instance.transaction do |e|
-        x = e.add_one(1)
-        e.add_two(x)
+        e.add_one(1)
+        raise "error"
       end
 
       expect(result.error!).to be(:error)
