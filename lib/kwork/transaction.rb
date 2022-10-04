@@ -21,11 +21,11 @@ module Kwork
     end
 
     def transaction(&block)
-      @adapter.wrap(
-        catch(:halt) do
+      catch(:halt) do
+        @adapter.wrap(
           block.(@executor)
-        end
-      )
+        )
+      end
     end
 
     # Avoids the need to call from the executor

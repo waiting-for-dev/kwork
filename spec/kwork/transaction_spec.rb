@@ -13,6 +13,10 @@ RSpec.describe Kwork::Transaction do
     Kwork::Result.pure(value)
   end
 
+  def failure(value)
+    Kwork::Result::Failure.new(value)
+  end
+
   describe "#transaction" do
     it "chains operations" do
       instance = build(
@@ -21,11 +25,25 @@ RSpec.describe Kwork::Transaction do
       )
 
       result = instance.transaction do |e|
-        two = e.add_one(1)
-        e.add_two(two)
+        x = e.add_one(1)
+        e.add_two(x)
       end
 
       expect(result.value!).to be(4)
+    end
+
+    it "stops chaining on failure" do
+      instance = build(
+        add_one: ->(_x) { failure(:error) },
+        add_two: ->(x) { success(x + 2) }
+      )
+
+      result = instance.transaction do |e|
+        x = e.add_one(1)
+        e.add_two(x)
+      end
+
+      expect(result.error!).to be(:error)
     end
   end
 
