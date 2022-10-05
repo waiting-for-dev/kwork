@@ -13,9 +13,9 @@ module Kwork
     def initialize(
       operations:,
       adapter: ResultAdapter,
-      executor: Executor.new(methods: operations, adapter: adapter)
+      executor: Executor.new(methods: operations.to_h, adapter: adapter)
     )
-      @operations = operations
+      @operations = operations.to_h
       @executor = executor
       @adapter = adapter
     end
