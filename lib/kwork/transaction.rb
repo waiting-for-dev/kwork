@@ -6,6 +6,8 @@ require "kwork/result_adapter"
 module Kwork
   # Base class to define business transactions
   class Transaction
+    NULL_EXTENSION = ->(&block) { block.() }
+
     def self.with_delegation
       include(MethodMissing)
     end
@@ -13,19 +15,25 @@ module Kwork
     def initialize(
       operations:,
       adapter: ResultAdapter,
-      executor: Executor.new(methods: operations.to_h, adapter: adapter)
+      executor: Executor.new(methods: operations, adapter: adapter),
+      extension: NULL_EXTENSION
     )
-      @operations = operations.to_h
+      @operations = operations
       @executor = executor
       @adapter = adapter
+      @extension = extension
     end
 
     def transaction(&block)
-      catch(:halt) do
-        @adapter.wrap(
-          block.(@executor)
-        )
+      result = nil
+      @extension.() do
+        result = catch(:halt) do
+          @adapter.wrap(
+            block.(@executor)
+          )
+        end
       end
+      result
     end
 
     def with(**operations)
