@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "kwork/executor"
-require "kwork/result_adapter"
+require "kwork/adapter/result"
 
 module Kwork
   # Base class to define business transactions
@@ -14,7 +14,7 @@ module Kwork
 
     def initialize(
       operations:,
-      adapter: ResultAdapter,
+      adapter: Adapter::Result,
       executor: Executor.new(methods: operations, adapter: adapter),
       extension: NULL_EXTENSION
     )
