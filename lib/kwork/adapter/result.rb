@@ -10,8 +10,16 @@ module Kwork
         Kwork::Result.pure(value)
       end
 
+      def self.fail(value)
+        Kwork::Result::Failure.new(value)
+      end
+
       def self.unwrap(result)
         result.value!
+      end
+
+      def self.unwrap_failure(result)
+        result.error!
       end
 
       def self.success?(result)
