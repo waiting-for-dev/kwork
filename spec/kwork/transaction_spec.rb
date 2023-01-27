@@ -5,10 +5,6 @@ require "kwork/transaction"
 require "spec_helper"
 
 RSpec.describe Kwork::Transaction do
-  def build(klass: described_class, **operations)
-    klass.new(operations: operations)
-  end
-
   def success(value)
     Kwork::Result.pure(value)
   end
@@ -19,10 +15,10 @@ RSpec.describe Kwork::Transaction do
 
   describe "#transaction" do
     it "chains operations" do
-      instance = build(
+      instance = described_class.new(operations: {
         add_one: ->(x) { success(x + 1) },
         add_two: ->(x) { success(x + 2) }
-      )
+      })
 
       result = instance.transaction do |e|
         x = e.add_one(1)
@@ -33,10 +29,10 @@ RSpec.describe Kwork::Transaction do
     end
 
     it "stops chaining on failure" do
-      instance = build(
+      instance = described_class.new(operations: {
         add_one: ->(_x) { failure(:error) },
         add_two: ->(x) { success(x + 2) }
-      )
+      })
 
       result = instance.transaction do |e|
         e.add_one(1)
@@ -47,10 +43,10 @@ RSpec.describe Kwork::Transaction do
     end
 
     it "can intersperse operations that doesn't return a result" do
-      instance = build(
+      instance = described_class.new(operations: {
         add_one: ->(x) { success(x + 1) },
         add_two: ->(x) { success(x + 2) }
-      )
+      })
 
       result = instance.transaction do |e|
         x = e.add_one(1)
@@ -62,9 +58,9 @@ RSpec.describe Kwork::Transaction do
     end
 
     it "accepts anything responding to call as operation" do
-      instance = build(
+      instance = described_class.new(operations: {
         add_one: ->(x) { success(x + 1) }.method(:call)
-      )
+      })
 
       result = instance.transaction do |e|
         e.add_one(1)
@@ -110,9 +106,9 @@ RSpec.describe Kwork::Transaction do
 
   describe "#with" do
     it "returns new instance" do
-      instance = build(
+      instance = described_class.new(operations: {
         add: ->(x) { success(x + 1) }
-      )
+      })
 
       new_instance = instance.with(add: -> {})
 
@@ -120,9 +116,9 @@ RSpec.describe Kwork::Transaction do
     end
 
     it "replaces operations" do
-      instance = build(
+      instance = described_class.new(operations: {
         add: ->(x) { success(x + 1) }
-      )
+      })
 
       new_instance = instance.with(add: ->(x) { success(x + 2) })
 
@@ -144,11 +140,10 @@ RSpec.describe Kwork::Transaction do
         end
       end
       klass.with_delegation
-      instance = build(
+      instance = klass.new(operations: {
         add_one: ->(x) { success(x + 1) },
-        add_two: ->(x) { success(x + 2) },
-        klass: klass
-      )
+        add_two: ->(x) { success(x + 2) }
+      })
 
       expect(instance.().value!).to be(4)
     end
