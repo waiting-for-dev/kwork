@@ -18,10 +18,6 @@ module Kwork
         result.value!
       end
 
-      def self.unwrap_failure(result)
-        result.error!
-      end
-
       def self.success?(result)
         result.success?
       end

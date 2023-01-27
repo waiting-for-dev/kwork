@@ -2,6 +2,7 @@
 
 require "kwork/adapter/result"
 require "kwork/adapter/dry_monads/result"
+require "kwork/adapter/dry_monads/maybe"
 require "kwork/transaction"
 require "kwork/extensions/active_record"
 
@@ -22,7 +23,7 @@ RSpec.describe Kwork::Extensions::ActiveRecord do
 
   after { Foo.delete_all }
 
-  [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result].each do |adapter|
+  [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result, Kwork::Adapter::DryMonads::Maybe].each do |adapter|
     it "rolls transaction back on failure" do
       instance = Kwork::Transaction.new(
         operations: {

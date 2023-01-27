@@ -2,11 +2,12 @@
 
 require "kwork/adapter/result"
 require "kwork/adapter/dry_monads/result"
+require "kwork/adapter/dry_monads/maybe"
 require "kwork/transaction"
 require "spec_helper"
 
 RSpec.describe Kwork::Transaction do
-  [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result].each do |adapter|
+  [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result, Kwork::Adapter::DryMonads::Maybe].each do |adapter|
     describe "#transaction" do
       it "chains operations" do
         instance = described_class.new(
@@ -28,9 +29,10 @@ RSpec.describe Kwork::Transaction do
       end
 
       it "stops chaining on failure" do
+        failure = adapter.fail(:error)
         instance = described_class.new(
           operations: {
-            add_one: ->(_x) { adapter.fail(:error) },
+            add_one: ->(_x) { failure },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
           adapter: adapter
@@ -42,8 +44,8 @@ RSpec.describe Kwork::Transaction do
         end
 
         expect(
-          adapter.unwrap_failure(result)
-        ).to be(:error)
+          result
+        ).to be(failure)
       end
 
       it "can intersperse operations that doesn't return a result" do
