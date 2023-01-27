@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require "kwork/adapter/result"
+require "kwork/adapter/dry_monads/result"
 require "kwork/transaction"
 require "spec_helper"
 
 RSpec.describe Kwork::Transaction do
-  [Kwork::Adapter::Result].each do |adapter|
+  [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result].each do |adapter|
     describe "#transaction" do
       it "chains operations" do
         instance = described_class.new(
