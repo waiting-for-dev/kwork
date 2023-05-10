@@ -11,20 +11,20 @@ module Kwork
     module DryMonads
       # Adapter for Dry::Monads::Maybe
       module Maybe
-        def self.wrap(value)
+        def self.success
+          Dry::Monads::Maybe::Some
+        end
+
+        def self.failure
+          Dry::Monads::Maybe::None
+        end
+
+        def self.wrap_success(value)
           Dry::Monads::Maybe.pure(value)
         end
 
-        def self.fail(_value)
+        def self.wrap_failure(_)
           Dry::Monads::Maybe::None.new
-        end
-
-        def self.unwrap(result)
-          result.value!
-        end
-
-        def self.success?(result)
-          result.success?
         end
       end
     end

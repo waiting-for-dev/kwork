@@ -12,10 +12,10 @@ module Kwork
 
     def call(name, *args, **kwargs)
       result = @operations[name].(*args, **kwargs)
-
-      if @adapter.success?(result)
-        @adapter.unwrap(result)
-      else
+      case result
+      in [value] if result.is_a?(@adapter.success)
+        value
+      in ^(@adapter.failure)
         throw :halt, result
       end
     end

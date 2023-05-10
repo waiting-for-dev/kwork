@@ -11,20 +11,20 @@ module Kwork
     module DryMonads
       # Adapter for Dry::Monads::Result
       module Result
-        def self.wrap(value)
+        def self.success
+          Dry::Monads::Result::Success
+        end
+
+        def self.failure
+          Dry::Monads::Result::Failure
+        end
+
+        def self.wrap_success(value)
           Dry::Monads::Result.pure(value)
         end
 
-        def self.fail(value)
+        def self.wrap_failure(value)
           Dry::Monads::Result::Failure.new(value)
-        end
-
-        def self.unwrap(result)
-          result.value!
-        end
-
-        def self.success?(result)
-          result.success?
         end
       end
     end

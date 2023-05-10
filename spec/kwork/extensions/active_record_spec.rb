@@ -27,8 +27,8 @@ RSpec.describe Kwork::Extensions::ActiveRecord do
     it "rolls transaction back on failure" do
       instance = Kwork::Transaction.new(
         operations: {
-          add_one: -> { adapter.wrap(Foo.create(bar: "bar")) },
-          add_two: -> { adapter.fail(:error) }
+          add_one: -> { adapter.wrap_success(Foo.create(bar: "bar")) },
+          add_two: -> { adapter.wrap_failure(:error) }
         },
         extension: described_class,
         adapter:

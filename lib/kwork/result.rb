@@ -25,6 +25,10 @@ module Kwork
       def value!
         @value
       end
+
+      def deconstruct
+        [value!]
+      end
     end
 
     # Left
@@ -44,6 +48,10 @@ module Kwork
 
       def error!
         @error
+      end
+
+      def deconstruct
+        [@error]
       end
     end
   end

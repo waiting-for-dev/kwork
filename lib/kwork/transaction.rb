@@ -28,7 +28,7 @@ module Kwork
       result = nil
       @extension.() do
         result = catch(:halt) do
-          @executor.adapter.wrap(
+          @executor.adapter.wrap_success(
             block.(@executor)
           )
         end

@@ -15,8 +15,8 @@ RSpec.describe Kwork do
         klass = Class.new do
           include Kwork[
             operations: {
-              add_one: ->(x) { adapter.wrap(x + 1) },
-              add_two: ->(x) { adapter.wrap(x + 2) }
+              add_one: ->(x) { adapter.wrap_success(x + 1) },
+              add_two: ->(x) { adapter.wrap_success(x + 2) }
             },
             adapter:
           ]
@@ -29,19 +29,17 @@ RSpec.describe Kwork do
           end
         end
 
-        result = klass.new.()
+        klass.new.() => [value]
 
-        expect(
-          adapter.unwrap(result)
-        ).to be(4)
+        expect(value).to be(4)
       end
 
       it "delegates from the instance" do
         klass = Class.new do
           include Kwork[
             operations: {
-              add_one: ->(x) { adapter.wrap(x + 1) },
-              add_two: ->(x) { adapter.wrap(x + 2) }
+              add_one: ->(x) { adapter.wrap_success(x + 1) },
+              add_two: ->(x) { adapter.wrap_success(x + 2) }
             },
             adapter:
           ]
@@ -54,11 +52,9 @@ RSpec.describe Kwork do
           end
         end
 
-        result = klass.new.()
+        klass.new.() => [value]
 
-        expect(
-          adapter.unwrap(result)
-        ).to be(4)
+        expect(value).to be(4)
       end
     end
   end

@@ -6,20 +6,20 @@ module Kwork
   module Adapter
     # Adapter for Kwork::Result
     module Result
-      def self.wrap(value)
+      def self.success
+        Kwork::Result::Success
+      end
+
+      def self.failure
+        Kwork::Result::Failure
+      end
+
+      def self.wrap_success(value)
         Kwork::Result.pure(value)
       end
 
-      def self.fail(value)
+      def self.wrap_failure(value)
         Kwork::Result::Failure.new(value)
-      end
-
-      def self.unwrap(result)
-        result.value!
-      end
-
-      def self.success?(result)
-        result.success?
       end
     end
   end
