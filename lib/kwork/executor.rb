@@ -3,13 +3,15 @@
 module Kwork
   # Wraps operations and throws on error
   class Executor
-    def initialize(methods:, adapter:)
-      @methods = methods
+    attr_reader :operations, :adapter
+
+    def initialize(operations:, adapter:)
+      @operations = operations
       @adapter = adapter
     end
 
     def call(name, *args, **kwargs)
-      result = @methods[name].(*args, **kwargs)
+      result = @operations[name].(*args, **kwargs)
 
       if @adapter.success?(result)
         @adapter.unwrap(result)
@@ -19,11 +21,11 @@ module Kwork
     end
 
     def method_missing(name, *args, **kwargs)
-      @methods.key?(name) ? call(name, *args, **kwargs) : super
+      @operations.key?(name) ? call(name, *args, **kwargs) : super
     end
 
     def respond_to_missing?(name, include_all)
-      @methods.key?(name) || super
+      @operations.key?(name) || super
     end
   end
 end

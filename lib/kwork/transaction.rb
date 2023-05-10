@@ -8,7 +8,7 @@ module Kwork
   class Transaction
     NULL_EXTENSION = ->(&block) { block.() }
 
-    attr_reader :executor, :operations
+    attr_reader :executor
 
     def self.with_delegation
       include(MethodMissing)
@@ -17,12 +17,10 @@ module Kwork
     def initialize(
       operations:,
       adapter: Adapter::Result,
-      executor: Executor.new(methods: operations, adapter: adapter),
+      executor: Executor.new(operations: operations, adapter: adapter),
       extension: NULL_EXTENSION
     )
-      @operations = operations
       @executor = executor
-      @adapter = adapter
       @extension = extension
     end
 
@@ -30,7 +28,7 @@ module Kwork
       result = nil
       @extension.() do
         result = catch(:halt) do
-          @adapter.wrap(
+          @executor.adapter.wrap(
             block.(@executor)
           )
         end
@@ -39,23 +37,23 @@ module Kwork
     end
 
     def with(**operations)
-      new_operations = @operations.merge(operations)
+      new_operations = @executor.operations.merge(operations)
 
       self.class.new(
         operations: new_operations,
-        adapter: @adapter,
-        executor: Executor.new(methods: new_operations, adapter: @adapter)
+        adapter: @executor.adapter,
+        executor: Executor.new(operations: new_operations, adapter: @executor.adapter)
       )
     end
 
     # Avoids the need to call from the executor
     module MethodMissing
       def method_missing(name, *args, **kwargs)
-        operations.key?(name) ? executor.(name, *args, **kwargs) : super
+        executor.operations.key?(name) ? executor.(name, *args, **kwargs) : super
       end
 
       def respond_to_missing?(name, include_all)
-        operations.key?(name) || super
+        executor.operations.key?(name) || super
       end
     end
   end
