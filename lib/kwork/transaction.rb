@@ -41,8 +41,7 @@ module Kwork
 
       self.class.new(
         operations: new_operations,
-        adapter: @executor.adapter,
-        executor: Executor.new(operations: new_operations, adapter: @executor.adapter)
+        adapter: @executor.adapter
       )
     end
 
