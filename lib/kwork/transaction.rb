@@ -8,6 +8,8 @@ module Kwork
   class Transaction
     NULL_EXTENSION = ->(&block) { block.() }
 
+    attr_reader :executor, :operations
+
     def self.with_delegation
       include(MethodMissing)
     end
@@ -49,11 +51,11 @@ module Kwork
     # Avoids the need to call from the executor
     module MethodMissing
       def method_missing(name, *args, **kwargs)
-        @operations.key?(name) ? @executor.(name, *args, **kwargs) : super
+        operations.key?(name) ? executor.(name, *args, **kwargs) : super
       end
 
       def respond_to_missing?(name, include_all)
-        @operations.key?(name) || super
+        operations.key?(name) || super
       end
     end
   end
