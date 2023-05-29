@@ -15,7 +15,7 @@ RSpec.describe Kwork::Transaction do
             add_one: ->(x) { adapter.wrap(x + 1) },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
-          adapter: adapter
+          adapter:
         )
 
         result = instance.transaction do |e|
@@ -35,7 +35,7 @@ RSpec.describe Kwork::Transaction do
             add_one: ->(_x) { failure },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
-          adapter: adapter
+          adapter:
         )
 
         result = instance.transaction do |e|
@@ -54,7 +54,7 @@ RSpec.describe Kwork::Transaction do
             add_one: ->(x) { adapter.wrap(x + 1) },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
-          adapter: adapter
+          adapter:
         )
 
         result = instance.transaction do |e|
@@ -73,7 +73,7 @@ RSpec.describe Kwork::Transaction do
           operations: {
             add_one: ->(x) { adapter.wrap(x + 1) }.method(:call)
           },
-          adapter: adapter
+          adapter:
         )
 
         result = instance.transaction do |e|
@@ -106,8 +106,8 @@ RSpec.describe Kwork::Transaction do
             add_one: ->(x) { adapter.wrap(x + 1) },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
-          extension: extension,
-          adapter: adapter
+          extension:,
+          adapter:
         )
 
         result = instance.transaction do |e|
@@ -128,7 +128,7 @@ RSpec.describe Kwork::Transaction do
           operations: {
             add: ->(x) { adapter.wrap(x + 1) }
           },
-          adapter: adapter
+          adapter:
         )
 
         new_instance = instance.with(add: -> {})
@@ -141,7 +141,7 @@ RSpec.describe Kwork::Transaction do
           operations: {
             add: ->(x) { success(x + 1) }
           },
-          adapter: adapter
+          adapter:
         )
 
         new_instance = instance.with(add: ->(x) { adapter.wrap(x + 2) })
@@ -171,7 +171,7 @@ RSpec.describe Kwork::Transaction do
             add_one: ->(x) { adapter.wrap(x + 1) },
             add_two: ->(x) { adapter.wrap(x + 2) }
           },
-          adapter: adapter
+          adapter:
         )
 
         result = instance.()

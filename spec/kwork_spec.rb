@@ -18,7 +18,7 @@ RSpec.describe Kwork do
               add_one: ->(x) { adapter.wrap(x + 1) },
               add_two: ->(x) { adapter.wrap(x + 2) }
             },
-            adapter: adapter
+            adapter:
           ]
 
           def call
@@ -43,7 +43,7 @@ RSpec.describe Kwork do
               add_one: ->(x) { adapter.wrap(x + 1) },
               add_two: ->(x) { adapter.wrap(x + 2) }
             },
-            adapter: adapter
+            adapter:
           ]
 
           def call

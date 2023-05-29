@@ -8,15 +8,15 @@ module Kwork
   class Error < StandardError; end
 
   def self.[](operations:, adapter:, extension: Transaction::NULL_EXTENSION)
-    TransactionWrapper.new(operations: operations, adapter: adapter, extension: extension)
+    TransactionWrapper.new(operations:, adapter:, extension:)
   end
 
   # Wraps a {Kwork::Transaction}
   class TransactionWrapper < Module
     # Instance methods to make available
     module InstanceMethods
-      def transaction(&block)
-        self.class.instance_variable_get(:@transaction).transaction(&block)
+      def transaction(&)
+        self.class.instance_variable_get(:@transaction).transaction(&)
       end
 
       def executor

@@ -17,7 +17,7 @@ module Kwork
     def initialize(
       operations:,
       adapter: Adapter::Result,
-      executor: Executor.new(operations: operations, adapter: adapter),
+      executor: Executor.new(operations:, adapter:),
       extension: NULL_EXTENSION
     )
       @executor = executor

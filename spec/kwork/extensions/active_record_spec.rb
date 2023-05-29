@@ -31,7 +31,7 @@ RSpec.describe Kwork::Extensions::ActiveRecord do
           add_two: -> { adapter.fail(:error) }
         },
         extension: described_class,
-        adapter: adapter
+        adapter:
       )
 
       instance.transaction do |e|
