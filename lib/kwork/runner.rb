@@ -2,7 +2,7 @@
 
 module Kwork
   # Wraps operations and throws on error
-  class Executor
+  class Runner
     attr_reader :operations, :adapter
 
     def initialize(operations:, adapter:)

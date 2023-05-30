@@ -19,8 +19,8 @@ module Kwork
         self.class.instance_variable_get(:@transaction).transaction(&)
       end
 
-      def executor
-        self.class.instance_variable_get(:@transaction).executor
+      def runner
+        self.class.instance_variable_get(:@transaction).runner
       end
     end
 

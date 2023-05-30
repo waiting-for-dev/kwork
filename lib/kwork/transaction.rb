@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "kwork/executor"
+require "kwork/runner"
 require "kwork/adapter/result"
 
 module Kwork
@@ -8,7 +8,7 @@ module Kwork
   class Transaction
     NULL_EXTENSION = ->(&block) { block.() }
 
-    attr_reader :executor
+    attr_reader :runner
 
     def self.with_delegation
       include(MethodMissing)
@@ -17,10 +17,10 @@ module Kwork
     def initialize(
       operations:,
       adapter: Adapter::Result,
-      executor: Executor.new(operations:, adapter:),
+      runner: Runner.new(operations:, adapter:),
       extension: NULL_EXTENSION
     )
-      @executor = executor
+      @runner = runner
       @extension = extension
     end
 
@@ -28,8 +28,8 @@ module Kwork
       result = nil
       @extension.() do
         result = catch(:halt) do
-          @executor.adapter.wrap_success(
-            block.(@executor)
+          @runner.adapter.wrap_success(
+            block.(@runner)
           )
         end
       end
@@ -37,22 +37,22 @@ module Kwork
     end
 
     def with(**operations)
-      new_operations = @executor.operations.merge(operations)
+      new_operations = @runner.operations.merge(operations)
 
       self.class.new(
         operations: new_operations,
-        adapter: @executor.adapter
+        adapter: @runner.adapter
       )
     end
 
-    # Avoids the need to call from the executor
+    # Avoids the need to call from the runner
     module MethodMissing
       def method_missing(name, *args, **kwargs)
-        executor.operations.key?(name) ? executor.(name, *args, **kwargs) : super
+        runner.operations.key?(name) ? runner.(name, *args, **kwargs) : super
       end
 
       def respond_to_missing?(name, include_all)
-        executor.operations.key?(name) || super
+        runner.operations.key?(name) || super
       end
     end
   end
