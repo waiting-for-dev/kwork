@@ -56,6 +56,30 @@ RSpec.describe Kwork do
 
         expect(value).to be(4)
       end
+
+      it "can inject operations on initialization" do
+        klass = Class.new do
+          include Kwork[
+            operations: {
+              add_one: ->(x) { adapter.wrap_success(x + 1) },
+              add_two: ->(x) { adapter.wrap_success(x + 2) }
+            },
+            adapter:
+          ]
+
+          def call
+            transaction do
+              x = add_one(1)
+              add_two(x)
+            end
+          end
+        end
+        add_three = ->(x) { adapter.wrap_success(x + 3) }
+
+        klass.new(operations: { add_two: add_three }).() => [value]
+
+        expect(value).to be(5)
+      end
     end
   end
 end

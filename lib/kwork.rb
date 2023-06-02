@@ -15,12 +15,21 @@ module Kwork
   class TransactionWrapper < Module
     # Instance methods to make available
     module InstanceMethods
+      def initialize(operations: {})
+        @_transaction = Transaction.new(
+          operations: self.class.instance_variable_get(:@_operations).merge(operations),
+          adapter: self.class.instance_variable_get(:@_adapter),
+          extension: self.class.instance_variable_get(:@_extension)
+        )
+        super()
+      end
+
       def transaction(&)
-        self.class.instance_variable_get(:@transaction).transaction(&)
+        @_transaction.transaction(&)
       end
 
       def runner
-        self.class.instance_variable_get(:@transaction).runner
+        @_transaction.runner
       end
     end
 
@@ -28,12 +37,16 @@ module Kwork
 
     # rubocop:disable Lint/MissingSuper
     def initialize(operations:, adapter:, extension:)
-      @transaction = Transaction.new(operations:, adapter:, extension:)
+      @operations = operations
+      @adapter = adapter
+      @extension = extension
     end
     # rubocop:enable Lint/MissingSuper
 
     def included(klass)
-      klass.instance_variable_set(:@transaction, @transaction)
+      klass.instance_variable_set(:@_operations, @operations)
+      klass.instance_variable_set(:@_adapter, @adapter)
+      klass.instance_variable_set(:@_extension, @extension)
       klass.include(Transaction::MethodMissing)
       klass.include(InstanceMethods)
     end
