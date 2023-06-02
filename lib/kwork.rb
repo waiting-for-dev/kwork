@@ -13,11 +13,22 @@ module Kwork
 
   # Wraps a {Kwork::Transaction}
   class TransactionWrapper < Module
+    # @api private
+    def self.resolve_operations(operations, instance)
+      operations.transform_values do |operation|
+        operation.is_a?(Symbol) ? instance.method(operation) : operation
+      end
+    end
+
     # Instance methods to make available
     module InstanceMethods
       def initialize(operations: {})
+        operations = TransactionWrapper.resolve_operations(
+          self.class.instance_variable_get(:@_operations).merge(operations),
+          self
+        )
         @_transaction = Transaction.new(
-          operations: self.class.instance_variable_get(:@_operations).merge(operations),
+          operations:,
           adapter: self.class.instance_variable_get(:@_adapter),
           extension: self.class.instance_variable_get(:@_extension)
         )
@@ -26,10 +37,6 @@ module Kwork
 
       def transaction(&)
         @_transaction.transaction(&)
-      end
-
-      def runner
-        @_transaction.runner
       end
     end
 
@@ -47,7 +54,6 @@ module Kwork
       klass.instance_variable_set(:@_operations, @operations)
       klass.instance_variable_set(:@_adapter, @adapter)
       klass.instance_variable_set(:@_extension, @extension)
-      klass.include(Transaction::MethodMissing)
       klass.include(InstanceMethods)
     end
   end

@@ -22,32 +22,9 @@ RSpec.describe Kwork do
           ]
 
           def call
-            transaction do |e|
-              x = e.add_one(1)
-              e.add_two(x)
-            end
-          end
-        end
-
-        klass.new.() => [value]
-
-        expect(value).to be(4)
-      end
-
-      it "delegates from the instance" do
-        klass = Class.new do
-          include Kwork[
-            operations: {
-              add_one: ->(x) { adapter.wrap_success(x + 1) },
-              add_two: ->(x) { adapter.wrap_success(x + 2) }
-            },
-            adapter:
-          ]
-
-          def call
-            transaction do
-              x = add_one(1)
-              add_two(x)
+            transaction do |r|
+              x = r.add_one(1)
+              r.add_two(x)
             end
           end
         end
@@ -68,9 +45,9 @@ RSpec.describe Kwork do
           ]
 
           def call
-            transaction do
-              x = add_one(1)
-              add_two(x)
+            transaction do |r|
+              x = r.add_one(1)
+              r.add_two(x)
             end
           end
         end
@@ -79,6 +56,35 @@ RSpec.describe Kwork do
         klass.new(operations: { add_two: add_three }).() => [value]
 
         expect(value).to be(5)
+      end
+
+      it "can use own methods as operations" do
+        klass = Class.new do
+          include Kwork[
+            operations: {
+              add_one: :add_one,
+              add_two: ->(x) { adapter.wrap_success(x + 2) }
+            },
+            adapter:
+          ]
+
+          def call
+            transaction do |r|
+              x = r.add_one(1)
+              r.add_two(x)
+            end
+          end
+
+          private
+
+          def add_one(value)
+            self.class.instance_variable_get(:@_adapter).wrap_success(value + 1)
+          end
+        end
+
+        klass.new.() => [value]
+
+        expect(value).to be(4)
       end
     end
   end

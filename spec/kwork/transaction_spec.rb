@@ -18,9 +18,9 @@ RSpec.describe Kwork::Transaction do
           adapter:
         )
 
-        instance.transaction do |e|
-          x = e.add_one(1)
-          e.add_two(x)
+        instance.transaction do |r|
+          x = r.add_one(1)
+          r.add_two(x)
         end => [value]
 
         expect(value).to be(4)
@@ -35,8 +35,8 @@ RSpec.describe Kwork::Transaction do
           adapter:
         )
 
-        result = instance.transaction do |e|
-          e.add_one(1)
+        result = instance.transaction do |r|
+          r.add_one(1)
           raise "error"
         end
 
@@ -52,10 +52,10 @@ RSpec.describe Kwork::Transaction do
           adapter:
         )
 
-        instance.transaction do |e|
-          x = e.add_one(1)
+        instance.transaction do |r|
+          x = r.add_one(1)
           y = x + 1
-          e.add_two(y)
+          r.add_two(y)
         end => [value]
 
         expect(value).to be(5)
@@ -69,8 +69,8 @@ RSpec.describe Kwork::Transaction do
           adapter:
         )
 
-        instance.transaction do |e|
-          e.add_one(1)
+        instance.transaction do |r|
+          r.add_one(1)
         end => [value]
 
         expect(value).to be(2)
@@ -99,9 +99,9 @@ RSpec.describe Kwork::Transaction do
           adapter:
         )
 
-        instance.transaction do |e|
-          x = e.add_one(1)
-          e.add_two(x)
+        instance.transaction do |r|
+          x = r.add_one(1)
+          r.add_two(x)
         end => [value]
 
         aggregate_failures do
@@ -135,34 +135,10 @@ RSpec.describe Kwork::Transaction do
 
         new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
 
-        new_instance.transaction do |e|
-          e.add(1)
+        new_instance.transaction do |r|
+          r.add(1)
         end => [value]
         expect(value).to be(3)
-      end
-    end
-
-    describe ".with_delegation" do
-      it "can delegate from the transaction instance" do
-        klass = Class.new(described_class) do
-          def call
-            transaction do
-              two = add_one(1)
-              add_two(two)
-            end
-          end
-        end
-        klass.with_delegation
-        instance = klass.new(
-          operations: {
-            add_one: ->(x) { adapter.wrap_success(x + 1) },
-            add_two: ->(x) { adapter.wrap_success(x + 2) }
-          },
-          adapter:
-        )
-
-        instance.() => [value]
-        expect(value).to be(4)
       end
     end
   end
