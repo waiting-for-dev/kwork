@@ -15,8 +15,12 @@ module Kwork
   class TransactionWrapper < Module
     # @api private
     def self.resolve_operations(operations, instance)
-      operations.transform_values do |operation|
-        operation.is_a?(Symbol) ? instance.method(operation) : operation
+      if operations.is_a?(Array)
+        Hash[operations.map { [_1, instance.method(_1)] }]
+      else
+        operations.transform_values do |operation|
+          operation.is_a?(Symbol) ? instance.method(operation) : operation
+        end
       end
     end
 
@@ -24,9 +28,9 @@ module Kwork
     module InstanceMethods
       def initialize(operations: {})
         operations = TransactionWrapper.resolve_operations(
-          self.class.instance_variable_get(:@_operations).merge(operations),
+          self.class.instance_variable_get(:@_operations),
           self
-        )
+        ).merge(operations)
         @_transaction = Transaction.new(
           operations:,
           adapter: self.class.instance_variable_get(:@_adapter),
