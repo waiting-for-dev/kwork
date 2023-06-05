@@ -90,7 +90,7 @@ RSpec.describe Kwork do
       it "can use a list of symbols as operations when all of them reference methods" do
         klass = Class.new do
           include Kwork[
-            operations: [:add_one, :add_two],
+            operations: %i[add_one add_two],
             adapter:
           ]
 

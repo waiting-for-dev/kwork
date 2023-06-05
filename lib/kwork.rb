@@ -1,35 +1,25 @@
 # frozen_string_literal: true
 
 require_relative "kwork/version"
+require_relative "kwork/resolver"
 require_relative "kwork/transaction"
 
 # DSL usage for a {Kwork::Transaction}
 module Kwork
   class Error < StandardError; end
 
-  def self.[](operations:, adapter:, extension: Transaction::NULL_EXTENSION)
-    TransactionWrapper.new(operations:, adapter:, extension:)
+  def self.[](operations:, adapter:, extension: Transaction::NULL_EXTENSION, resolver: Resolver)
+    TransactionWrapper.new(operations:, adapter:, extension:, resolver:)
   end
 
   # Wraps a {Kwork::Transaction}
   class TransactionWrapper < Module
-    # @api private
-    def self.resolve_operations(operations, instance)
-      if operations.is_a?(Array)
-        Hash[operations.map { [_1, instance.method(_1)] }]
-      else
-        operations.transform_values do |operation|
-          operation.is_a?(Symbol) ? instance.method(operation) : operation
-        end
-      end
-    end
-
     # Instance methods to make available
     module InstanceMethods
       def initialize(operations: {})
-        operations = TransactionWrapper.resolve_operations(
-          self.class.instance_variable_get(:@_operations),
-          self
+        operations = self.class.instance_variable_get(:@_resolver).(
+          operations: self.class.instance_variable_get(:@_operations),
+          instance: self
         ).merge(operations)
         @_transaction = Transaction.new(
           operations:,
@@ -47,10 +37,11 @@ module Kwork
     include InstanceMethods
 
     # rubocop:disable Lint/MissingSuper
-    def initialize(operations:, adapter:, extension:)
+    def initialize(operations:, adapter:, extension:, resolver:)
       @operations = operations
       @adapter = adapter
       @extension = extension
+      @resolver = resolver
     end
     # rubocop:enable Lint/MissingSuper
 
@@ -58,6 +49,7 @@ module Kwork
       klass.instance_variable_set(:@_operations, @operations)
       klass.instance_variable_set(:@_adapter, @adapter)
       klass.instance_variable_set(:@_extension, @extension)
+      klass.instance_variable_set(:@_resolver, @resolver)
       klass.include(InstanceMethods)
     end
   end

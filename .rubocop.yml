@@ -29,6 +29,9 @@ RSpec/ExampleLength:
 RSpec/BeforeAfterAll:
   Enabled: false
 
+Style/HashConversion:
+  Enabled: false
+
 require:
   - rubocop-rspec
   - rubocop-rake
