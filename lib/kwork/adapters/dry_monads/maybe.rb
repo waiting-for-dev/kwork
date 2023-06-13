@@ -3,11 +3,11 @@
 begin
   require "dry/monads"
 rescue LoadError
-  raise "Please add dry-monads gem to your Gemfile to use Kwork::Adapter::DryMonads::Maybe"
+  raise "Please add dry-monads gem to your Gemfile to use Kwork::Adapters::DryMonads::Maybe"
 end
 
 module Kwork
-  module Adapter
+  module Adapters
     module DryMonads
       # Adapter for Dry::Monads::Maybe
       module Maybe

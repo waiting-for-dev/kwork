@@ -3,7 +3,7 @@
 require "kwork/result"
 
 module Kwork
-  module Adapter
+  module Adapters
     # Adapter for Kwork::Result
     module Result
       def self.success

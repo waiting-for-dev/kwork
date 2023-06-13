@@ -3,13 +3,21 @@
 require_relative "kwork/version"
 require_relative "kwork/resolver"
 require_relative "kwork/transaction"
+require_relative "kwork/adapters/registry"
+require_relative "kwork/adapters"
 
 # DSL usage for a {Kwork::Transaction}
 module Kwork
   class Error < StandardError; end
 
-  def self.[](operations:, adapter:, extension: Transaction::NULL_EXTENSION, resolver: Resolver)
-    TransactionWrapper.new(operations:, adapter:, extension:, resolver:)
+  def self.[](
+    operations:,
+    adapter:,
+    extension: Transaction::NULL_EXTENSION,
+    resolver: Resolver,
+    registry: Adapters::Registry.new
+  )
+    TransactionWrapper.new(operations:, adapter:, extension:, resolver:, registry:)
   end
 
   # Wraps a {Kwork::Transaction}
@@ -37,9 +45,10 @@ module Kwork
     include InstanceMethods
 
     # rubocop:disable Lint/MissingSuper
-    def initialize(operations:, adapter:, extension:, resolver:)
+    def initialize(operations:, adapter:, extension:, resolver:, registry:)
       @operations = operations
-      @adapter = adapter
+      @registry = registry
+      @adapter = Adapters.Type(adapter, @registry)
       @extension = extension
       @resolver = resolver
     end
@@ -50,6 +59,7 @@ module Kwork
       klass.instance_variable_set(:@_adapter, @adapter)
       klass.instance_variable_set(:@_extension, @extension)
       klass.instance_variable_set(:@_resolver, @resolver)
+      klass.instance_variable_set(:@_registry, @registry)
       klass.include(InstanceMethods)
     end
   end

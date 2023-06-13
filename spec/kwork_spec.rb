@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "kwork/adapter/result"
-require "kwork/adapter/dry_monads/result"
-require "kwork/adapter/dry_monads/maybe"
+require "kwork/adapters/result"
+require "kwork/adapters/dry_monads/result"
+require "kwork/adapters/dry_monads/maybe"
 
 RSpec.describe Kwork do
   it "has a version number" do
@@ -10,7 +10,7 @@ RSpec.describe Kwork do
   end
 
   context "when included" do
-    [Kwork::Adapter::Result, Kwork::Adapter::DryMonads::Result, Kwork::Adapter::DryMonads::Maybe].each do |adapter|
+    [Kwork::Adapters::Result, Kwork::Adapters::DryMonads::Result, Kwork::Adapters::DryMonads::Maybe].each do |adapter|
       it "transparently works with a transaction instance" do
         klass = Class.new do
           include Kwork[
@@ -116,6 +116,29 @@ RSpec.describe Kwork do
 
         expect(value).to be(4)
       end
+    end
+
+    it "can take the adapter as a symbol" do
+      klass = Class.new do
+        include Kwork[
+          operations: {
+            add_one: ->(x) { Dry::Monads::Result.pure(x + 1) },
+            add_two: ->(x) { Dry::Monads::Result.pure(x + 2) }
+          },
+          adapter: :result
+        ]
+
+        def call
+          transaction do |r|
+            x = r.add_one(1)
+            r.add_two(x)
+          end
+        end
+      end
+
+      klass.new.() => [value]
+
+      expect(value).to be(4)
     end
   end
 end

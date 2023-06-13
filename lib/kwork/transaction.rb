@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "kwork/runner"
-require "kwork/adapter/result"
+require "kwork/adapters/result"
 
 module Kwork
   # Base class to define business transactions
@@ -12,7 +12,7 @@ module Kwork
 
     def initialize(
       operations:,
-      adapter: Adapter::Result,
+      adapter: Adapters::Result,
       runner: Runner.new(operations:, adapter:),
       extension: NULL_EXTENSION
     )
