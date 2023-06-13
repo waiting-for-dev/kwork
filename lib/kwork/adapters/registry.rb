@@ -2,7 +2,7 @@
 
 require "kwork/adapters/dry_monads/maybe"
 require "kwork/adapters/dry_monads/result"
-require "kwork/adapters/result"
+require "kwork/adapters/kwork"
 
 module Kwork
   # @api private
@@ -12,7 +12,7 @@ module Kwork
       DEFAULTS = {
         result: DryMonads::Result,
         maybe: DryMonads::Maybe,
-        kwork: Result
+        kwork: Kwork
       }.freeze
 
       def initialize

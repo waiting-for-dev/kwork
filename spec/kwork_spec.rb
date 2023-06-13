@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "kwork/adapters/result"
+require "kwork/adapters/kwork"
 require "kwork/adapters/dry_monads/result"
 require "kwork/adapters/dry_monads/maybe"
 
@@ -10,7 +10,7 @@ RSpec.describe Kwork do
   end
 
   context "when included" do
-    [Kwork::Adapters::Result, Kwork::Adapters::DryMonads::Result, Kwork::Adapters::DryMonads::Maybe].each do |adapter|
+    [Kwork::Adapters::Kwork, Kwork::Adapters::DryMonads::Result, Kwork::Adapters::DryMonads::Maybe].each do |adapter|
       it "transparently works with a transaction instance" do
         klass = Class.new do
           include Kwork[

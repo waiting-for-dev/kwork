@@ -7,7 +7,7 @@ RSpec.describe Kwork::Adapters::Registry do
     it "adds kwork adapter" do
       registry = described_class.new
 
-      expect(registry.fetch(:kwork)).to be(Kwork::Adapters::Result)
+      expect(registry.fetch(:kwork)).to be(Kwork::Adapters::Kwork)
     end
 
     it "adds dry-monad's result adapter" do

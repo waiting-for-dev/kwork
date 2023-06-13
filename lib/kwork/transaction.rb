@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "kwork/runner"
-require "kwork/adapters/result"
+require "kwork/adapters/kwork"
 
 module Kwork
   # Base class to define business transactions
