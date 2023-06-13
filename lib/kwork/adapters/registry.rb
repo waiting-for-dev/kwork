@@ -7,6 +7,7 @@ require "kwork/adapters/result"
 module Kwork
   # @api private
   module Adapters
+    # Result types registry
     class Registry
       DEFAULTS = {
         result: DryMonads::Result,
@@ -27,7 +28,7 @@ module Kwork
           raise KeyError, <<~MSG
             Adapter #{shortcut} is not known.
 
-            Known adapters are: #{@registry.keys.map(&:inspect).join(', ')}
+            Known adapters are: #{@registry.keys.map(&:inspect).join(", ")}
           MSG
         end
       end
