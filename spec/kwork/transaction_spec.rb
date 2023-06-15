@@ -95,7 +95,7 @@ RSpec.describe Kwork::Transaction do
         end
       end
 
-      describe "#with" do
+      describe "#merge_operations" do
         it "returns a new instance" do
           instance = described_class.new(
             operations: {
@@ -104,7 +104,7 @@ RSpec.describe Kwork::Transaction do
             adapter:
           )
 
-          new_instance = instance.with(add: -> {})
+          new_instance = instance.merge_operations(add: -> {})
 
           expect(instance).not_to be(new_instance)
         end
@@ -117,7 +117,7 @@ RSpec.describe Kwork::Transaction do
             adapter:
           )
 
-          new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
+          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
 
           new_instance.transaction do |r|
             r.add(1)
@@ -133,7 +133,7 @@ RSpec.describe Kwork::Transaction do
             adapter: Object
           )
 
-          new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
+          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
 
           expect(new_instance.runner.adapter).to be(Object)
         end
@@ -147,7 +147,7 @@ RSpec.describe Kwork::Transaction do
             extension: Object
           )
 
-          new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
+          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
 
           expect(new_instance.extension).to be(Object)
         end

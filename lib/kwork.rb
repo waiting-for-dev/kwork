@@ -34,7 +34,7 @@ module Kwork
           operations: dsl_operations,
           adapter: self.class.instance_variable_get(:@_adapter),
           extension: self.class.instance_variable_get(:@_extension)
-        ).with(**operations)
+        ).merge_operations(**operations)
         super()
       end
 

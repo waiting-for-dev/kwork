@@ -32,7 +32,7 @@ module Kwork
       result
     end
 
-    def with(**operations)
+    def merge_operations(**operations)
       new_operations = @runner.operations.merge(operations)
 
       self.class.new(
