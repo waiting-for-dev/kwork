@@ -26,15 +26,15 @@ module Kwork
     # Instance methods to make available
     module InstanceMethods
       def initialize(operations: {})
-        operations = self.class.instance_variable_get(:@_resolver).(
+        dsl_operations = self.class.instance_variable_get(:@_resolver).(
           operations: self.class.instance_variable_get(:@_operations),
           instance: self
-        ).merge(operations)
+        )
         @_transaction = Transaction.new(
-          operations:,
+          operations: dsl_operations,
           adapter: self.class.instance_variable_get(:@_adapter),
           extension: self.class.instance_variable_get(:@_extension)
-        )
+        ).with(**operations)
         super()
       end
 
