@@ -8,7 +8,7 @@ module Kwork
   class Transaction
     NULL_EXTENSION = ->(&block) { block.() }
 
-    attr_reader :runner
+    attr_reader :runner, :extension
 
     def initialize(
       operations:,
@@ -37,7 +37,8 @@ module Kwork
 
       self.class.new(
         operations: new_operations,
-        adapter: @runner.adapter
+        adapter: @runner.adapter,
+        extension: @extension
       )
     end
   end

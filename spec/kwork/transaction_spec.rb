@@ -124,6 +124,33 @@ RSpec.describe Kwork::Transaction do
           end => [value]
           expect(value).to be(3)
         end
+
+        it "keeps the adapter" do
+          instance = described_class.new(
+            operations: {
+              add: ->(x) { success(x + 1) }
+            },
+            adapter: Object
+          )
+
+          new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
+
+          expect(new_instance.runner.adapter).to be(Object)
+        end
+
+        it "keeps the extension" do
+          instance = described_class.new(
+            operations: {
+              add: ->(x) { success(x + 1) }
+            },
+            adapter:,
+            extension: Object
+          )
+
+          new_instance = instance.with(add: ->(x) { adapter.wrap_success(x + 2) })
+
+          expect(new_instance.extension).to be(Object)
+        end
       end
     end
   end
