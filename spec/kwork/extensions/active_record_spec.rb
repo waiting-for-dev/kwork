@@ -4,7 +4,7 @@ require "kwork/result"
 require "kwork/transaction"
 require "kwork/extensions/active_record"
 
-RSpec.describe Kwork::Extensions::ActiveRecord do
+RSpec.describe "Kwork::Extensions::ActiveRecord" do
   before(:all) do
     ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: "db/test.rb")
 
@@ -27,7 +27,7 @@ RSpec.describe Kwork::Extensions::ActiveRecord do
         add_one: -> { Kwork::Result.pure(Foo.create(bar: "bar")) },
         add_two: -> { Kwork::Result::Failure.new(:error) }
       },
-      extension: described_class
+      extension: Kwork::Extensions::ActiveRecord
     )
 
     instance.transaction do |e|
