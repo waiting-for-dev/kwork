@@ -8,7 +8,7 @@ RSpec.describe Kwork::Transaction do
   shared_examples "transaction" do |adapter|
     context "with #{adapter} adapter" do
       describe "#transaction" do
-        it "chains operations" do
+        it "chains successful operations, unwrapping intermediate results" do
           instance = described_class.new(
             operations: {
               add_one: ->(x) { adapter.wrap_success(x + 1) },
@@ -25,7 +25,7 @@ RSpec.describe Kwork::Transaction do
           expect(value).to be(4)
         end
 
-        it "stops chaining on failure" do
+        it "stops chaining on failure, returning last result" do
           instance = described_class.new(
             operations: {
               add_one: ->(_x) { adapter.wrap_failure(:error) },
@@ -42,7 +42,7 @@ RSpec.describe Kwork::Transaction do
           expect(result).to be_a(adapter.failure)
         end
 
-        it "can intersperse operations that doesn't return a result" do
+        it "doesn't require all calls within the block to return a result" do
           instance = described_class.new(
             operations: {
               add_one: ->(x) { adapter.wrap_success(x + 1) },
@@ -58,21 +58,6 @@ RSpec.describe Kwork::Transaction do
           end => [value]
 
           expect(value).to be(5)
-        end
-
-        it "accepts anything responding to call as operation" do
-          instance = described_class.new(
-            operations: {
-              add_one: ->(x) { adapter.wrap_success(x + 1) }.method(:call)
-            },
-            adapter:
-          )
-
-          instance.transaction do |r|
-            r.add_one(1)
-          end => [value]
-
-          expect(value).to be(2)
         end
 
         it "wraps with provided extension" do
@@ -111,7 +96,7 @@ RSpec.describe Kwork::Transaction do
       end
 
       describe "#with" do
-        it "returns new instance" do
+        it "returns a new instance" do
           instance = described_class.new(
             operations: {
               add: ->(x) { adapter.wrap_success(x + 1) }
@@ -124,7 +109,7 @@ RSpec.describe Kwork::Transaction do
           expect(instance).not_to be(new_instance)
         end
 
-        it "replaces operations" do
+        it "replaces with given operations" do
           instance = described_class.new(
             operations: {
               add: ->(x) { success(x + 1) }

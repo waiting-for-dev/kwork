@@ -2,6 +2,7 @@
 
 require "kwork"
 require "kwork/result"
+require "dry/monads/result"
 
 RSpec.describe Kwork do
   it "has a version number" do
@@ -9,7 +10,7 @@ RSpec.describe Kwork do
   end
 
   context "when included" do
-    it "transparently works with a transaction instance" do
+    it "transparently delegates to a transaction instance" do
       klass = Class.new do
         include Kwork[
           operations: {
@@ -54,7 +55,7 @@ RSpec.describe Kwork do
       expect(value).to be(5)
     end
 
-    it "can use own methods as operations" do
+    it "can use own methods as operations when given as symbols" do
       klass = Class.new do
         include Kwork[
           operations: {
@@ -82,7 +83,7 @@ RSpec.describe Kwork do
       expect(value).to be(4)
     end
 
-    it "can use a list of symbols as operations when all of them reference methods" do
+    it "can take all operations from methods when given as an array of symbols" do
       klass = Class.new do
         include Kwork[
           operations: %i[add_one add_two]
