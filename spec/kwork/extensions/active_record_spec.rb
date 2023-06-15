@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "kwork/adapters/kwork"
-require "kwork/adapters/dry_monads/result"
-require "kwork/adapters/dry_monads/maybe"
+require "kwork/result"
 require "kwork/transaction"
 require "kwork/extensions/active_record"
 
@@ -23,23 +21,20 @@ RSpec.describe Kwork::Extensions::ActiveRecord do
 
   after { Foo.delete_all }
 
-  [Kwork::Adapters::Kwork, Kwork::Adapters::DryMonads::Result, Kwork::Adapters::DryMonads::Maybe].each do |adapter|
-    it "rolls transaction back on failure" do
-      instance = Kwork::Transaction.new(
-        operations: {
-          add_one: -> { adapter.wrap_success(Foo.create(bar: "bar")) },
-          add_two: -> { adapter.wrap_failure(:error) }
-        },
-        extension: described_class,
-        adapter:
-      )
+  it "rolls transaction back on failure" do
+    instance = Kwork::Transaction.new(
+      operations: {
+        add_one: -> { Kwork::Result.pure(Foo.create(bar: "bar")) },
+        add_two: -> { Kwork::Result::Failure.new(:error) }
+      },
+      extension: described_class
+    )
 
-      instance.transaction do |e|
-        e.add_one
-        e.add_two
-      end
-
-      expect(Foo.count).to be(0)
+    instance.transaction do |e|
+      e.add_one
+      e.add_two
     end
+
+    expect(Foo.count).to be(0)
   end
 end

@@ -12,7 +12,7 @@ module Kwork
 
     def initialize(
       operations:,
-      adapter: Adapters::Result,
+      adapter: Adapters::Kwork,
       runner: Runner.new(operations:, adapter:),
       extension: NULL_EXTENSION
     )

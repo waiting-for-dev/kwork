@@ -32,6 +32,10 @@ module Kwork
           MSG
         end
       end
+
+      def adapters
+        @registry.values
+      end
     end
   end
 end

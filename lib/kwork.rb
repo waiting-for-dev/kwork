@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "kwork/version"
+require_relative "kwork/adapters"
+require_relative "kwork/adapters/registry"
+require_relative "kwork/adapters/kwork"
 require_relative "kwork/resolver"
 require_relative "kwork/transaction"
-require_relative "kwork/adapters/registry"
-require_relative "kwork/adapters"
+require_relative "kwork/version"
 
 # DSL usage for a {Kwork::Transaction}
 module Kwork
@@ -12,7 +13,7 @@ module Kwork
 
   def self.[](
     operations:,
-    adapter:,
+    adapter: Adapters::Kwork,
     extension: Transaction::NULL_EXTENSION,
     resolver: Resolver,
     registry: Adapters::Registry.new
