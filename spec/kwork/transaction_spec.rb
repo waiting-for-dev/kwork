@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "kwork/adapters/registry"
+require "kwork/result"
 require "kwork/transaction"
 require "spec_helper"
 
@@ -94,68 +95,65 @@ RSpec.describe Kwork::Transaction do
           end
         end
       end
-
-      describe "#merge_operations" do
-        it "returns a new instance" do
-          instance = described_class.new(
-            operations: {
-              add: ->(x) { adapter.wrap_success(x + 1) }
-            },
-            adapter:
-          )
-
-          new_instance = instance.merge_operations(add: -> {})
-
-          expect(instance).not_to be(new_instance)
-        end
-
-        it "replaces with given operations" do
-          instance = described_class.new(
-            operations: {
-              add: ->(x) { success(x + 1) }
-            },
-            adapter:
-          )
-
-          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
-
-          new_instance.transaction do |r|
-            r.add(1)
-          end => [value]
-          expect(value).to be(3)
-        end
-
-        it "keeps the adapter" do
-          instance = described_class.new(
-            operations: {
-              add: ->(x) { success(x + 1) }
-            },
-            adapter: Object
-          )
-
-          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
-
-          expect(new_instance.runner.adapter).to be(Object)
-        end
-
-        it "keeps the extension" do
-          instance = described_class.new(
-            operations: {
-              add: ->(x) { success(x + 1) }
-            },
-            adapter:,
-            extension: Object
-          )
-
-          new_instance = instance.merge_operations(add: ->(x) { adapter.wrap_success(x + 2) })
-
-          expect(new_instance.extension).to be(Object)
-        end
-      end
     end
   end
 
   Kwork::Adapters::Registry.new.adapters.each do |adapter|
     include_examples "transaction", adapter
+  end
+
+  describe "#merge_operations" do
+    it "returns a new instance" do
+      instance = described_class.new(
+        operations: {
+          add: ->(x) { Kwork::Result.pure(x + 1) }
+        }
+      )
+
+      new_instance = instance.merge_operations
+
+      expect(instance).not_to be(new_instance)
+    end
+
+    it "merge given operations" do
+      instance = described_class.new(
+        operations: {
+          add: ->(x) { Kwork::Result.pure(x + 1) }
+        }
+      )
+
+      new_instance = instance.merge_operations(add: ->(x) { Kwork::Result.pure(x + 2) })
+
+      new_instance.transaction do |r|
+        r.add(1)
+      end => [value]
+      expect(value).to be(3)
+    end
+
+    it "keeps the adapter" do
+      instance = described_class.new(
+        operations: {
+          add: ->(x) { Kwork::Result.pure(x + 1) }
+        },
+        adapter: Object
+      )
+
+      new_instance = instance.merge_operations
+
+      expect(new_instance.runner.adapter).to be(Object)
+    end
+
+    it "keeps the extension" do
+      instance = described_class.new(
+        operations: {
+          add: ->(x) { Kwork::Result.pure(x + 1) }
+        },
+        extension: Object
+      )
+
+      new_instance = instance.merge_operations
+
+      expect(new_instance.extension).to be(Object)
+    end
   end
 end
