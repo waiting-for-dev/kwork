@@ -26,6 +26,13 @@ module Kwork
         @value
       end
 
+      def failure!
+        raise <<~MSG
+          There's no failure wrapped within a Kwork::Result::Success instance.
+          Do you want to call `#value!` instead?
+        MSG
+      end
+
       def deconstruct
         [value!]
       end
@@ -44,6 +51,13 @@ module Kwork
 
       def failure?
         true
+      end
+
+      def value!
+        raise <<~MSG
+          There's no value wrapped within a Kwork::Result::Failure instance
+          Do you want to call `#failure!` instead?
+        MSG
       end
 
       def failure!

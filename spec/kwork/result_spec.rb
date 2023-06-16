@@ -34,6 +34,12 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#failure!" do
+      it "raises an error" do
+        expect { described_class.new(1).failure! }.to raise_error(/no failure wrapped/)
+      end
+    end
+
     describe "#deconstruct" do
       it "deconstructs to given value" do
         expect(described_class.new(1).deconstruct).to eq([1])
@@ -51,6 +57,12 @@ RSpec.describe Kwork::Result do
     describe "#failure?" do
       it "returns true" do
         expect(described_class.new(1).failure?).to be(true)
+      end
+    end
+
+    describe "#value!" do
+      it "raises an error" do
+        expect { described_class.new(1).value! }.to raise_error(/no value wrapped/)
       end
     end
 
