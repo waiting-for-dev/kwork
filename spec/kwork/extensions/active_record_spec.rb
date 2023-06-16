@@ -8,9 +8,11 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
   before(:all) do
     ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: "db/test.rb")
 
-    ActiveRecord::Schema.define do
-      create_table :foos, force: true do |t|
-        t.string :bar, null: false
+    ActiveRecord::Migration.suppress_messages do
+      ActiveRecord::Schema.define do
+        create_table :foos, force: true do |t|
+          t.string :bar, null: false
+        end
       end
     end
   end
