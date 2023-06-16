@@ -33,6 +33,10 @@ module Kwork
         MSG
       end
 
+      def value_or(_value)
+        @value
+      end
+
       def map
         self.class.new(yield @value)
       end
@@ -72,6 +76,10 @@ module Kwork
 
       def failure!
         @failure
+      end
+
+      def value_or(value)
+        value
       end
 
       def map

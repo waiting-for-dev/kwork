@@ -40,6 +40,12 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#value_or" do
+      it "returns wrapped value" do
+        expect(described_class.new(1).value_or(2)).to be(1)
+      end
+    end
+
     describe "#map" do
       it "apply given block to wrapped value" do
         expect(described_class.new(1).map { |x| x + 1 }).to eq(described_class.new(2))
@@ -97,6 +103,12 @@ RSpec.describe Kwork::Result do
     describe "#failure!" do
       it "returns wrapped failure" do
         expect(described_class.new(1).failure!).to be(1)
+      end
+    end
+
+    describe "#value_or" do
+      it "returns given value" do
+        expect(described_class.new(1).value_or(2)).to be(2)
       end
     end
 
