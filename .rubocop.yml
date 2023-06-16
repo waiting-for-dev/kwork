@@ -32,6 +32,9 @@ RSpec/BeforeAfterAll:
 Style/HashConversion:
   Enabled: false
 
+Style/CaseEquality:
+  Enabled: false
+
 require:
   - rubocop-rspec
   - rubocop-rake

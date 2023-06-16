@@ -33,6 +33,12 @@ module Kwork
         MSG
       end
 
+      def ==(other)
+        self.class === other &&
+          other.instance_variable_get(:@value) == @value
+      end
+      alias eql? ==
+
       def deconstruct
         [value!]
       end
@@ -63,6 +69,12 @@ module Kwork
       def failure!
         @failure
       end
+
+      def ==(other)
+        self.class === other &&
+          other.instance_variable_get(:@failure) == @failure
+      end
+      alias eql? ==
 
       def deconstruct
         [@failure]

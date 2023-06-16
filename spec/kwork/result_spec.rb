@@ -40,6 +40,28 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#==" do
+      it "returns true if other is a Success wrapping the same value" do
+        # rubocop:disable RSpec/IdenticalEqualityAssertion
+        expect(described_class.new(1)).to eq(described_class.new(1))
+        # rubocop:enable RSpec/IdenticalEqualityAssertion
+      end
+
+      it "returns false if other is a Success wrapping a different value" do
+        expect(described_class.new(1)).not_to eq(described_class.new(2))
+      end
+
+      it "returns false if other is not a Success" do
+        other = Class.new do
+          def initialize
+            @value = 1
+          end
+        end.new
+
+        expect(described_class.new(1)).not_to eq(other)
+      end
+    end
+
     describe "#deconstruct" do
       it "deconstructs to given value" do
         expect(described_class.new(1).deconstruct).to eq([1])
@@ -69,6 +91,28 @@ RSpec.describe Kwork::Result do
     describe "#failure!" do
       it "returns wrapped failure" do
         expect(described_class.new(1).failure!).to be(1)
+      end
+    end
+
+    describe "#==" do
+      it "returns true if other is a Failure wrapping the same failure" do
+        # rubocop:disable RSpec/IdenticalEqualityAssertion
+        expect(described_class.new(1)).to eq(described_class.new(1))
+        # rubocop:enable RSpec/IdenticalEqualityAssertion
+      end
+
+      it "returns false if other is a Failure wrapping a different value" do
+        expect(described_class.new(1)).not_to eq(described_class.new(2))
+      end
+
+      it "returns false if other is not a Failure" do
+        other = Class.new do
+          def initialize
+            @failure = 1
+          end
+        end.new
+
+        expect(described_class.new(1)).not_to eq(other)
       end
     end
 
