@@ -54,9 +54,9 @@ RSpec.describe Kwork::Result do
       end
     end
 
-    describe "#error!" do
-      it "returns wrapper error" do
-        expect(described_class.new(1).error!).to be(1)
+    describe "#failure!" do
+      it "returns wrapped failure" do
+        expect(described_class.new(1).failure!).to be(1)
       end
     end
 

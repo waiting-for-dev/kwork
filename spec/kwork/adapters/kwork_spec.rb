@@ -32,7 +32,7 @@ RSpec.describe Kwork::Adapters::Kwork do
 
       aggregate_failures do
         expect(result).to be_a(Kwork::Result::Failure)
-        expect(result.error!).to eq("foo")
+        expect(result.failure!).to eq("foo")
       end
     end
   end

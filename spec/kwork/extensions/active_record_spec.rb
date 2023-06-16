@@ -27,7 +27,7 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
     instance = Kwork::Transaction.new(
       operations: {
         add_one: -> { Kwork::Result.pure(Foo.create(bar: "bar")) },
-        add_two: -> { Kwork::Result::Failure.new(:error) }
+        add_two: -> { Kwork::Result::Failure.new(:failure) }
       },
       extension: Kwork::Extensions::ActiveRecord
     )

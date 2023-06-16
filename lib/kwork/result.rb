@@ -33,8 +33,8 @@ module Kwork
 
     # Left
     class Failure < Result
-      def initialize(error)
-        @error = error
+      def initialize(failure)
+        @failure = failure
         super()
       end
 
@@ -46,12 +46,12 @@ module Kwork
         true
       end
 
-      def error!
-        @error
+      def failure!
+        @failure
       end
 
       def deconstruct
-        [@error]
+        [@failure]
       end
     end
   end

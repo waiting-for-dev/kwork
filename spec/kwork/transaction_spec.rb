@@ -29,7 +29,7 @@ RSpec.describe Kwork::Transaction do
         it "stops chaining on failure, returning last result" do
           instance = described_class.new(
             operations: {
-              add_one: ->(_x) { adapter.wrap_failure(:error) },
+              add_one: ->(_x) { adapter.wrap_failure(:failure) },
               add_two: ->(x) { adapter.wrap_success(x + 2) }
             },
             adapter:
