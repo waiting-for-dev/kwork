@@ -52,6 +52,12 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#either" do
+      it "applies first function to wrapped value" do
+        expect(described_class.new(1).either(->(x) { x + 1 }, ->(x) { x - 1 })).to be(2)
+      end
+    end
+
     describe "#==" do
       it "returns true if other is a Success wrapping the same value" do
         # rubocop:disable RSpec/IdenticalEqualityAssertion
@@ -115,6 +121,12 @@ RSpec.describe Kwork::Result do
     describe "#map" do
       it "returns itself" do
         expect(described_class.new(1).map { |x| x + 1 }).to eq(described_class.new(1))
+      end
+    end
+
+    describe "#either" do
+      it "applies second function to wrapped failure" do
+        expect(described_class.new(1).either(->(x) { x + 1 }, ->(x) { x - 1 })).to be(0)
       end
     end
 

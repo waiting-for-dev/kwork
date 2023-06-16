@@ -35,6 +35,9 @@ Style/HashConversion:
 Style/CaseEquality:
   Enabled: false
 
+Naming/MethodParameterName:
+  Enabled: false
+
 require:
   - rubocop-rspec
   - rubocop-rake

@@ -41,6 +41,10 @@ module Kwork
         self.class.new(yield @value)
       end
 
+      def either(f, _g)
+        f.(@value)
+      end
+
       def ==(other)
         self.class === other &&
           other.instance_variable_get(:@value) == @value
@@ -84,6 +88,10 @@ module Kwork
 
       def map
         itself
+      end
+
+      def either(_f, g)
+        g.(@failure)
       end
 
       def ==(other)
