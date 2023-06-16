@@ -40,6 +40,12 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#map" do
+      it "apply given block to wrapped value" do
+        expect(described_class.new(1).map { |x| x + 1 }).to eq(described_class.new(2))
+      end
+    end
+
     describe "#==" do
       it "returns true if other is a Success wrapping the same value" do
         # rubocop:disable RSpec/IdenticalEqualityAssertion
@@ -91,6 +97,12 @@ RSpec.describe Kwork::Result do
     describe "#failure!" do
       it "returns wrapped failure" do
         expect(described_class.new(1).failure!).to be(1)
+      end
+    end
+
+    describe "#map" do
+      it "returns itself" do
+        expect(described_class.new(1).map { |x| x + 1 }).to eq(described_class.new(1))
       end
     end
 

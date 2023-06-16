@@ -33,6 +33,10 @@ module Kwork
         MSG
       end
 
+      def map
+        self.class.new(yield @value)
+      end
+
       def ==(other)
         self.class === other &&
           other.instance_variable_get(:@value) == @value
@@ -68,6 +72,10 @@ module Kwork
 
       def failure!
         @failure
+      end
+
+      def map
+        itself
       end
 
       def ==(other)
