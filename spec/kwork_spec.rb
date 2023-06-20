@@ -157,5 +157,37 @@ RSpec.describe Kwork do
 
       expect(value).to be(4)
     end
+
+    it "can use adapter instance methods in the instance" do
+      klass = Class.new do
+        include Kwork[
+          operations: {
+            add_one: :add_one,
+            add_two: :add_two
+          }
+        ]
+
+        def call
+          transaction do |r|
+            x = r.add_one(1)
+            r.add_two(x)
+          end
+        end
+
+        private
+
+        def add_one(value)
+          success(value + 1)
+        end
+
+        def add_two(value)
+          success(value + 2)
+        end
+      end
+
+      klass.new.() => [value]
+
+      expect(value).to be(4)
+    end
   end
 end

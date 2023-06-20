@@ -46,6 +46,14 @@ module Kwork
       def transaction(&)
         @_transaction.transaction(&)
       end
+
+      def success(value)
+        self.class.instance_variable_get(:@_adapter).wrap_success(value)
+      end
+
+      def failure(value)
+        self.class.instance_variable_get(:@_adapter).wrap_failure(value)
+      end
     end
 
     include InstanceMethods
