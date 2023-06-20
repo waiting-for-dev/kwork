@@ -111,51 +111,51 @@ RSpec.describe Kwork do
 
       expect(value).to be(4)
     end
-  end
 
-  it "can take the adapter as a symbol" do
-    klass = Class.new do
-      include Kwork[
-        operations: {
-          add_one: ->(x) { Dry::Monads::Result.pure(x + 1) },
-          add_two: ->(x) { Dry::Monads::Result.pure(x + 2) }
-        },
-        adapter: :result
-      ]
+    it "can take the adapter as a symbol" do
+      klass = Class.new do
+        include Kwork[
+          operations: {
+            add_one: ->(x) { Dry::Monads::Result.pure(x + 1) },
+            add_two: ->(x) { Dry::Monads::Result.pure(x + 2) }
+          },
+          adapter: :result
+        ]
 
-      def call
-        transaction do |r|
-          x = r.add_one(1)
-          r.add_two(x)
+        def call
+          transaction do |r|
+            x = r.add_one(1)
+            r.add_two(x)
+          end
         end
       end
+
+      klass.new.() => [value]
+
+      expect(value).to be(4)
     end
 
-    klass.new.() => [value]
+    it "can take the extension as a symbol" do
+      klass = Class.new do
+        include Kwork[
+          operations: {
+            add_one: ->(x) { Kwork::Result.pure(x + 1) },
+            add_two: ->(x) { Kwork::Result.pure(x + 2) }
+          },
+          extension: :active_record
+        ]
 
-    expect(value).to be(4)
-  end
-
-  it "can take the extension as a symbol" do
-    klass = Class.new do
-      include Kwork[
-        operations: {
-          add_one: ->(x) { Kwork::Result.pure(x + 1) },
-          add_two: ->(x) { Kwork::Result.pure(x + 2) }
-        },
-        extension: :active_record
-      ]
-
-      def call
-        transaction do |r|
-          x = r.add_one(1)
-          r.add_two(x)
+        def call
+          transaction do |r|
+            x = r.add_one(1)
+            r.add_two(x)
+          end
         end
       end
+
+      klass.new.() => [value]
+
+      expect(value).to be(4)
     end
-
-    klass.new.() => [value]
-
-    expect(value).to be(4)
   end
 end
