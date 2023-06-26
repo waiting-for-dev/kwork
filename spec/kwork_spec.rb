@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "kwork"
+require "kwork/extensions/active_record"
 require "kwork/result"
 require "dry/monads/result"
 
@@ -135,14 +136,14 @@ RSpec.describe Kwork do
       expect(value).to be(4)
     end
 
-    it "can take the extension as a symbol" do
+    it "can specify extension" do
       klass = Class.new do
         include Kwork[
           operations: {
             add_one: ->(x) { Kwork::Result.pure(x + 1) },
             add_two: ->(x) { Kwork::Result.pure(x + 2) }
           },
-          extension: :active_record
+          extension: Kwork::Extensions::ActiveRecord
         ]
 
         def call
