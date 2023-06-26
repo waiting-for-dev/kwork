@@ -37,6 +37,10 @@ module Kwork
         @value
       end
 
+      def bind
+        yield @value
+      end
+
       def map
         self.class.new(yield @value)
       end
@@ -84,6 +88,10 @@ module Kwork
 
       def value_or(value)
         value
+      end
+
+      def bind
+        itself
       end
 
       def map

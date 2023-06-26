@@ -46,8 +46,14 @@ RSpec.describe Kwork::Result do
       end
     end
 
+    describe "#bind" do
+      it "applies given block to wrapped value and returns the result" do
+        expect(described_class.new(1).bind { |x| Kwork::Result.pure(x + 1) }).to eq(described_class.new(2))
+      end
+    end
+
     describe "#map" do
-      it "apply given block to wrapped value" do
+      it "returns a new success which value is the result of applying given block to the former value" do
         expect(described_class.new(1).map { |x| x + 1 }).to eq(described_class.new(2))
       end
     end
@@ -115,6 +121,12 @@ RSpec.describe Kwork::Result do
     describe "#value_or" do
       it "returns given value" do
         expect(described_class.new(1).value_or(2)).to be(2)
+      end
+    end
+
+    describe "#bind" do
+      it "returns itself" do
+        expect(described_class.new(1).bind { |x| x + 1 }).to eq(described_class.new(1))
       end
     end
 
