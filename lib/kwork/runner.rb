@@ -12,9 +12,9 @@ module Kwork
       @adapter = adapter
     end
 
-    def call(name, *args, **kwargs)
+    def call(name, ...)
       result = @adapter.to_kwork_result(
-        @operations[name].(*args, **kwargs)
+        @operations[name].(...)
       )
       case result
       in Kwork::Result::Success[value]
@@ -24,8 +24,8 @@ module Kwork
       end
     end
 
-    def method_missing(name, *args, **kwargs)
-      @operations.key?(name) ? call(name, *args, **kwargs) : super
+    def method_missing(name, ...)
+      @operations.key?(name) ? call(name, ...) : super
     end
 
     def respond_to_missing?(name, include_all)
