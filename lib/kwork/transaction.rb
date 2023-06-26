@@ -7,7 +7,7 @@ require "kwork/adapters/kwork"
 module Kwork
   # Base class to define business transactions
   class Transaction
-    NULL_EXTENSION = ->(&block) { block.() }
+    NULL_EXTENSION = ->(callback) { callback.() }
 
     attr_reader :runner, :extension
 
@@ -22,14 +22,7 @@ module Kwork
     end
 
     def transaction(&block)
-      result = nil
-      @extension.() do
-        result = catch(:halt) do
-          Kwork::Result.pure(
-            block.(@runner)
-          )
-        end
-      end
+      result = @extension.(callback(block))
 
       @runner.adapter.from_kwork_result(result)
     end
@@ -42,6 +35,18 @@ module Kwork
         adapter: @runner.adapter,
         extension: @extension
       )
+    end
+
+    private
+
+    def callback(block)
+      lambda do
+        catch(:halt) do
+          Kwork::Result.pure(
+            block.(@runner)
+          )
+        end
+      end
     end
   end
 end

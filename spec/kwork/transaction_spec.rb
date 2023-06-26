@@ -63,15 +63,9 @@ RSpec.describe Kwork::Transaction do
 
         it "wraps with provided extension" do
           extension = Class.new do
-            attr_reader :value
-
-            def initialize
-              @value = nil
-            end
-
-            def call
-              yield => [value]
-              @value = value
+            def call(callback)
+              callback.() => [value]
+              Kwork::Result.pure(value + 1)
             end
           end.new
 
@@ -89,10 +83,7 @@ RSpec.describe Kwork::Transaction do
             r.add_two(x)
           end => [value]
 
-          aggregate_failures do
-            expect(extension.value).to be(4)
-            expect(value).to be(4)
-          end
+          expect(value).to be(5)
         end
       end
     end

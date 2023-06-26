@@ -4,10 +4,13 @@ require "active_record"
 
 module Kwork
   module Extensions
-    ActiveRecord = lambda do |&transaction|
+    ActiveRecord = lambda do |callback|
+      result = nil
       ::ActiveRecord::Base.transaction do
-        raise ::ActiveRecord::Rollback unless transaction.().success?
+        result = callback.()
+        raise ::ActiveRecord::Rollback unless result.success?
       end
+      result
     end
   end
 end
