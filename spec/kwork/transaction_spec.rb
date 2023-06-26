@@ -12,8 +12,8 @@ RSpec.describe Kwork::Transaction do
         it "chains successful operations, unwrapping intermediate results" do
           instance = described_class.new(
             operations: {
-              add_one: ->(x) { adapter.wrap_success(x + 1) },
-              add_two: ->(x) { adapter.wrap_success(x + 2) }
+              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
+              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
             },
             adapter:
           )
@@ -29,8 +29,8 @@ RSpec.describe Kwork::Transaction do
         it "stops chaining on failure, returning last result" do
           instance = described_class.new(
             operations: {
-              add_one: ->(_x) { adapter.wrap_failure(:failure) },
-              add_two: ->(x) { adapter.wrap_success(x + 2) }
+              add_one: ->(_x) { adapter.from_kwork_result(Kwork::Result::Failure.new(:failure)) },
+              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
             },
             adapter:
           )
@@ -40,14 +40,14 @@ RSpec.describe Kwork::Transaction do
             raise "error"
           end
 
-          expect(result).to be_a(adapter.failure)
+          expect(adapter.to_kwork_result(result)).to be_a(Kwork::Result::Failure)
         end
 
         it "doesn't require all calls within the block to return a result" do
           instance = described_class.new(
             operations: {
-              add_one: ->(x) { adapter.wrap_success(x + 1) },
-              add_two: ->(x) { adapter.wrap_success(x + 2) }
+              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
+              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
             },
             adapter:
           )
@@ -77,8 +77,8 @@ RSpec.describe Kwork::Transaction do
 
           instance = described_class.new(
             operations: {
-              add_one: ->(x) { adapter.wrap_success(x + 1) },
-              add_two: ->(x) { adapter.wrap_success(x + 2) }
+              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
+              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
             },
             extension:,
             adapter:

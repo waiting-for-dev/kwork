@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "kwork/result"
+
 module Kwork
   # Wraps operations and throws on error
   class Runner
@@ -11,12 +13,14 @@ module Kwork
     end
 
     def call(name, *args, **kwargs)
-      result = @operations[name].(*args, **kwargs)
+      result = @adapter.to_kwork_result(
+        @operations[name].(*args, **kwargs)
+      )
       case result
-      in [value] if result.is_a?(@adapter.success)
+      in Kwork::Result::Success[value]
         value
-      in ^(@adapter.failure)
-        throw :halt, result
+      in Kwork::Result::Failure
+        throw :halt, @adapter.from_kwork_result(result)
       end
     end
 

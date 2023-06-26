@@ -48,11 +48,17 @@ module Kwork
       end
 
       def success(value)
-        self.class.instance_variable_get(:@_adapter).wrap_success(value)
+        self.class.instance_variable_get(:@_adapter)
+            .from_kwork_result(
+              Kwork::Result.pure(value)
+            )
       end
 
       def failure(value)
-        self.class.instance_variable_get(:@_adapter).wrap_failure(value)
+        self.class.instance_variable_get(:@_adapter)
+            .from_kwork_result(
+              Kwork::Result::Failure.new(value)
+            )
       end
     end
 

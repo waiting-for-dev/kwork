@@ -158,36 +158,30 @@ RSpec.describe Kwork do
       expect(value).to be(4)
     end
 
-    it "can use adapter instance methods in the instance" do
-      klass = Class.new do
-        include Kwork[
-          operations: {
-            add_one: :add_one,
-            add_two: :add_two
-          }
-        ]
-
-        def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end
+    describe "#success" do
+      it "wraps in a success result" do
+        klass = Class.new do
+          include Kwork[
+            operations: {},
+            adapter: Kwork::Adapters::DryMonads::Result
+          ]
         end
 
-        private
-
-        def add_one(value)
-          success(value + 1)
-        end
-
-        def add_two(value)
-          success(value + 2)
-        end
+        expect(klass.new.success(1)).to eq(Dry::Monads::Result.pure(1))
       end
+    end
 
-      klass.new.() => [value]
+    describe "#failure" do
+      it "wraps in a failure result" do
+        klass = Class.new do
+          include Kwork[
+            operations: {},
+            adapter: Kwork::Adapters::DryMonads::Result
+          ]
+        end
 
-      expect(value).to be(4)
+        expect(klass.new.failure(1)).to eq(Dry::Monads::Result::Failure.new(1))
+      end
     end
   end
 end

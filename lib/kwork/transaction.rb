@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "kwork/result"
 require "kwork/runner"
 require "kwork/adapters/kwork"
 
@@ -24,9 +25,9 @@ module Kwork
       result = nil
       @extension.() do
         result = catch(:halt) do
-          @runner.adapter.wrap_success(
-            block.(@runner)
-          )
+          (
+            block >> Kwork::Result.method(:pure) >> @runner.adapter.method(:from_kwork_result)
+          ).(@runner)
         end
       end
       result
