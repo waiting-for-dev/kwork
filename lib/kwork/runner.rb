@@ -20,7 +20,7 @@ module Kwork
       in Kwork::Result::Success[value]
         value
       in Kwork::Result::Failure
-        throw :halt, @adapter.from_kwork_result(result)
+        throw :halt, result
       end
     end
 

@@ -25,12 +25,13 @@ module Kwork
       result = nil
       @extension.() do
         result = catch(:halt) do
-          (
-            block >> Kwork::Result.method(:pure) >> @runner.adapter.method(:from_kwork_result)
-          ).(@runner)
+          Kwork::Result.pure(
+            block.(@runner)
+          )
         end
       end
-      result
+
+      @runner.adapter.from_kwork_result(result)
     end
 
     def merge_operations(**operations)
