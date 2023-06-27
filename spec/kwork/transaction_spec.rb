@@ -85,6 +85,31 @@ RSpec.describe Kwork::Transaction do
 
           expect(value).to be(5)
         end
+
+        it "can run operations with provided profiler" do
+          profile = []
+          profiler = lambda do |callback, name, args, _kwargs, _block|
+            profile << "#{name} called with #{args[0]}"
+            callback.()
+          end
+
+          instance = described_class.new(
+            operations: {
+              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) }
+            },
+            adapter:,
+            profiler:
+          )
+
+          instance.transaction do |r|
+            r.add_one(1)
+          end => [value]
+
+          aggregate_failures do
+            expect(profile.first).to eq("add_one called with 1")
+            expect(value).to be(2)
+          end
+        end
       end
     end
   end
@@ -145,6 +170,19 @@ RSpec.describe Kwork::Transaction do
       new_instance = instance.merge_operations
 
       expect(new_instance.extension).to be(Object)
+    end
+
+    it "keeps the profiler" do
+      instance = described_class.new(
+        operations: {
+          add: ->(x) { Kwork::Result.pure(x + 1) }
+        },
+        profiler: Object
+      )
+
+      new_instance = instance.merge_operations
+
+      expect(new_instance.runner.profiler).to be(Object)
     end
   end
 end

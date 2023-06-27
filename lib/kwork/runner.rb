@@ -5,16 +5,18 @@ require "kwork/result"
 module Kwork
   # Wraps operations and throws on error
   class Runner
-    attr_reader :operations, :adapter
+    attr_reader :operations, :adapter, :profiler
 
-    def initialize(operations:, adapter:)
+    def initialize(operations:, adapter:, profiler:)
       @operations = operations
       @adapter = adapter
+      @profiler = profiler
     end
 
-    def __call(name, ...)
+    def __call(name, *args, **kwargs, &block)
+      callback = -> { @operations[name].(*args, **kwargs, &block) }
       result = @adapter.to_kwork_result(
-        @operations[name].(...)
+        @profiler.(callback, name, args, kwargs, block)
       )
       case result
       in Kwork::Result::Success[value]

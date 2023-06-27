@@ -9,12 +9,15 @@ module Kwork
   class Transaction
     NULL_EXTENSION = ->(callback) { callback.() }
 
+    NULL_PROFILER = ->(callback, _name, _args, _kwargs, _block) { callback.() }
+
     attr_reader :runner, :extension
 
     def initialize(
       operations:,
       adapter: Adapters::Kwork,
-      runner: Runner.new(operations:, adapter:),
+      profiler: NULL_PROFILER,
+      runner: Runner.new(operations:, adapter:, profiler:),
       extension: NULL_EXTENSION
     )
       @runner = runner
@@ -33,7 +36,8 @@ module Kwork
       self.class.new(
         operations: new_operations,
         adapter: @runner.adapter,
-        extension: @extension
+        extension: @extension,
+        profiler: @runner.profiler
       )
     end
 
