@@ -13,4 +13,9 @@ gem "rubocop", "~> 1.21"
 gem "rubocop-rake", "~> 0.6"
 gem "rubocop-rspec", "~> 2.13"
 
+gem "activerecord"
+gem "dry-monads"
+gem "rom-sql"
+gem "sqlite3"
+
 gem "debug"
