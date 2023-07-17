@@ -11,6 +11,9 @@ module Kwork
   module Adapters
     module DryMonads
       # Adapter for Dry::Monads::Result
+      #
+      # @see {Kwork::Adapters}
+      # @see https://dry-rb.org/gems/dry-monads/1.6/result/
       module Result
         def self.from_kwork_result(result)
           case result

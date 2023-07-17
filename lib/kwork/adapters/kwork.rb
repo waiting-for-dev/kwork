@@ -4,7 +4,7 @@ require "kwork/result"
 
 module Kwork
   module Adapters
-    # Adapter for Kwork::Result
+    # Adapter for {Kwork::Result}
     module Kwork
       def self.from_kwork_result(result)
         result

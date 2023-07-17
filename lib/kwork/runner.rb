@@ -3,7 +3,7 @@
 require "kwork/result"
 
 module Kwork
-  # Wraps operations and throws on error
+  # @api private
   class Runner
     attr_reader :operations, :adapter, :profiler
 

@@ -8,9 +8,26 @@ require_relative "kwork/transaction"
 require_relative "kwork/version"
 
 # DSL usage for a {Kwork::Transaction}
+#
+# Including this module brings a transaction instance and keeps it under the
+# hood. A `#transaction` instance method is made available to run the configured
+# operations. A couple of `#success` and `#failure` methods are also available
+# to wrap within the configured result adapter.
 module Kwork
   class Error < StandardError; end
 
+  # @param operations {Symbol => [#call, Symbol}, Array<Symbol>] Map of names and
+  #   callables returning a result type. If a {Symbol} is given instead of a
+  #   callable, that's taken as an instance method from the including class. If,
+  #   instead of an explicit map, a list of {Symbol} is given, all of them are
+  #   taken as instance methods from the including class and the method name is
+  #   used to identify them.
+  # @param adapter see {Kwork::Transaction#initialize}
+  # @param extension see {Kwork::Transaction#initialize}
+  # @param profiler see {Kwork::Transaction#initialize}
+  # @param resolver [#call] callable taking the declaration of operations and
+  #   returning a Hash of {Symbol} and callables for the resolved operations.
+  #
   # rubocop:disable Metrics/ParameterLists
   def self.[](
     operations:,
@@ -24,7 +41,7 @@ module Kwork
   end
   # rubocop:enable Metrics/ParameterLists
 
-  # Wraps a {Kwork::Transaction}
+  # @api private
   class TransactionWrapper < Module
     # Instance methods to make available
     module InstanceMethods
@@ -44,10 +61,15 @@ module Kwork
       end
       # rubocop:enable Metrics/MethodLength
 
+      # see {Kwork::Transaction#transaction}
       def transaction(&)
         @_transaction.transaction(&)
       end
 
+      # Wraps a value in the success type for the used result adapter
+      #
+      # @param value [Object]
+      # @return [Object]
       def success(value)
         self.class.instance_variable_get(:@_adapter)
             .from_kwork_result(
@@ -55,6 +77,10 @@ module Kwork
             )
       end
 
+      # Wraps a value in the failure type for the used result adapter
+      #
+      # @param value [Object]
+      # @return [Object]
       def failure(value)
         self.class.instance_variable_get(:@_adapter)
             .from_kwork_result(

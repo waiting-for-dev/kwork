@@ -11,7 +11,11 @@ module Kwork
   module Adapters
     module DryMonads
       # Adapter for Dry::Monads::Maybe
+      #
+      # @see {Kwork::Adapters}
+      # @see https://dry-rb.org/gems/dry-monads/1.6/maybe/
       module Maybe
+        # @api private
         def self.from_kwork_result(result)
           case result
           in ::Kwork::Result::Success(value)
@@ -21,6 +25,7 @@ module Kwork
           end
         end
 
+        # @api private
         def self.to_kwork_result(result)
           case result
           in Dry::Monads::Maybe::Some[value]
