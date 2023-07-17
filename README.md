@@ -1,28 +1,357 @@
 # Kwork
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/kwork`. To experiment with that code, run `bin/console` for an interactive prompt.
+Kwork is a library for building business transactions in Ruby designed to:
 
-TODO: Delete this and the text above, and describe your gem
+- Be written in a declarative and chainable way.
+- Decouple individual operations from business transactions.
+- Injecting operations for testing purposes or reusability.
+- Be used with different result types (e.g. `Kwork::Result`,
+  `Dry::Monads::Result`, `Dry::Monads::Maybe`...).
+- Provide transactional safety for different database adapters (e.g.,
+  `ROM`, `ActiveRecord`...).
+- Provide profiling information for each step of the transaction.
+
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'kwork'
+gem 'kwork', github: 'nebulab/kwork'
 ```
 
 And then execute:
 
     $ bundle install
 
-Or install it yourself as:
-
-    $ gem install kwork
-
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require "kwork"
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email]
+  ]
+
+  def call
+    transaction do |t|
+      user = t.create_user
+      t.build_email(user)
+    end
+  end
+
+  private
+
+  def create_user
+    success(
+      Struct.new(:id, :name).new(1, "Alice")
+    )
+  end
+
+  def build_email(user)
+    success(
+      "Hello #{user.name}!"
+    )
+  end
+end
+
+case AddUser.new.()
+in Kwork::Result::Success[message]
+  puts message
+in Kwork::Result::Failure[error]
+  puts error
+end # => "Hello Alice!"
+```
+
+The key concept to understand is how successful operations are chained. The
+`#create_user` method above returns a user instance wrapped within a
+`Kwork::Result::Success` type. However, when the operation is run within the
+block, the result is unwrapped and the user instance is passed as an argument to
+the `#build_email` method.
+
+When we execute the transaction, we pattern match on the result type and
+extract the final result of the whole transaction.
+
+Imagine that the `#create_user` method failed instead:
+
+```ruby
+require "kwork"
+
+class AddUser
+  include Kwork[
+    operations: [
+      :create_user,
+      :build_email
+    ]
+  ]
+
+  def call
+    transaction do |t|
+      user = t.create_user
+      t.build_email(user)
+    end
+  end
+
+  private
+
+  def create_user
+    failure(
+      "User already exists!"
+    )
+  end
+
+  def build_email(user)
+    success(
+      "Hello #{user.name}!"
+    )
+  end
+end
+
+case AddUser.new.()
+in Kwork::Result::Success[message]
+  puts message
+in Kwork::Result::Failure[error]
+  puts error
+end # => "User already exists!"
+```
+
+Notice how the transaction was short-circuited and the `#build_email` method
+was never called.
+
+### Result adapters
+
+Kwork transactions can work with any result type as long as an adapter is available. By default, it'll use a [`Kwork::Result`](lib/kwork/result.rb), which already provides a lot of features to access and transform the wrapped values. However, others adapters are shipped OOTB and you can also create your own.
+
+#### dry-monad's result type
+
+You need to add [dry-monads](https://dry-rb.org/gems/dry-monads/1.6/) to your `Gemfile` to use it:
+
+```ruby
+require "kwork"
+
+class AddUser
+  include Kwork[
+    operations: [
+      :create_user,
+      :build_email
+    ],
+    adapter: :result
+  ]
+
+  def call
+    transaction do |t|
+      user = t.create_user
+      t.build_email(user)
+    end
+  end
+
+  private
+
+  def create_user
+    success(
+      Struct.new(:id, :name).new(1, "Alice")
+    )
+  end
+
+  def build_email(user)
+    success(
+      "Hello #{user.name}!"
+    )
+  end
+end
+
+result = AddUser.new.()
+puts result.class #=> Dry::Monads::Result::Success
+puts result.value! #=> "Hello Alice!"
+```
+
+#### dry-monad's maybe type
+
+You need to add [dry-monads](https://dry-rb.org/gems/dry-monads/1.6/) to your `Gemfile` to use it:
+
+```ruby
+require "kwork"
+
+class AddUser
+  include Kwork[
+    operations: [
+      :create_user,
+      :build_email
+    ],
+    adapter: :maybe
+  ]
+
+  def call
+    transaction do |t|
+      user = t.create_user
+      t.build_email(user)
+    end
+  end
+
+  private
+
+  def create_user
+    failure(
+      "User already exists!"
+    )
+  end
+
+  def build_email(user)
+    success(
+      "Hello #{user.name}!"
+    )
+  end
+end
+
+result = AddUser.new.()
+puts result.class #=> Dry::Monads::Maybe::None
+```
+
+#### Custom adapters
+
+A custom adapter can be very easily created. You only need to provide an interface responding to both `#from_kwork_result` and `#to_kwork_result`. Take a look at how [the ones for dry-monads](lib/kwork/adapters/dry_monads/) are implemented for inspiration.
+
+```ruby
+module MyAdapter
+  # ...
+end
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email],
+    adapter: MyAdapter
+  ]
+  # ...
+end
+```
+
+### Extensions
+
+More often than not, a business transaction needs to be wrapped within a database transaction. To support this use case, Kwork gives you the ability to extend the transaction callback so you can wrap it with your own code. A couple of extensions are shipped by default, but you can easily build your own.
+
+#### ROM
+
+You need to add [rom](https://rom-rb.org/) to your `Gemfile` to use it. When this extension is used, the Kwork transaction is wrapped within a database transaction, which is rolled back in the case of returning a failure.
+
+```ruby
+require "kwork"
+require "kwork/extensions/rom"
+
+rom = # ROM container
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email],
+    extension: Kwork::Extensions::ROM[rom, :default] # :default is the name of the gateway
+  ]
+  # ...
+end
+```
+
+#### ActiveRecord
+
+On a Rails application, you can use the ActiveRecord extension. The raw Kwork transaction will be wrapped within a database transaction, and it'll be rolled back in case of returning a failure.
+
+```ruby
+require "kwork"
+require "kwork/extensions/active_record"
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email],
+    extension: Kwork::Extensions::ActiveRecord
+  ]
+  # ...
+end
+```
+
+#### Custom extensions
+
+Custom extensions are just anything responding to `#call` accepting the Kwork transaction callback. You only need to ensure that you respond the result of executing that callback. Take into account that the callback will return an instance of `Kwork::Result`, regardless of the adapter in use. That ensures fully operability with any result type.
+
+```ruby
+require "kwork"
+
+MyExtension = lambda do |callback|
+ callback.().tap do |result|
+   do_something if result.success?
+ end
+end
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email],
+    extension: MyExtension
+  ]
+  # ...
+end
+```
+
+### Profiling
+
+Kwork transactions can be profiled to get information about the execution of each operation. To create a profiler, you need to build a callable taking, in this order, the operation callback, the operation name, and the operation args, kwargs & block. For instance, this is how we can measure the time ellapsed by each operation:
+
+```ruby
+require "kwork"
+require "benchmark"
+
+Profiler = lambda do |callback, name, _args, _kwargs, _block|
+  result = nil
+  benchmark = Benchmark.measure do
+    result = callback.()
+  end
+  puts "#{name}: #{benchmark}"
+  result
+end
+
+class AddUser
+  include Kwork[
+    operations: [:create_user, :build_email],
+    profiler: Profiler
+  ]
+  # ...
+end
+
+AddUser.new.()
+# => create_user:   0.000040   0.000007   0.000047 (  0.000041)
+# => build_email:   0.000009   0.000000   0.000009 (  0.000008)
+# => Hello Alice!
+# => 
+```
+
+### Injecting operations
+
+You can inject operations different than the ones defined in the transaction on initialization. That's very useful for testing purposes:
+
+```ruby
+AddUser.new(
+  operations: {
+    # Avoiding database call
+    create_user: -> { success(Struct.new(:id, :name).new(1, "Alice")) },
+  }
+).()
+```
+
+### Decoupling operations
+
+It's a good practice to decouple operations from the transaction test for
+better reusability and testing. That plays very well with dependency injection
+of operations in the [dry-rb](https://dry-rb.org/) ecosystem:
+
+```ruby
+require "kwork"
+
+class AddUser
+  include Import["operations.create_user", "operations.build_email"]
+  
+  include Kwork[
+    operations: [:create_user, :build_email]
+  ]
+
+  # ...
+end
+```
 
 ## Development
 
