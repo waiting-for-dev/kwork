@@ -21,7 +21,7 @@ RSpec.describe "Kwork::Extensions::ROM" do
         create_record: -> { Kwork::Result.pure(rom.relations[:foo].command(:create).(bar: "bar")) },
         fail: -> { Kwork::Result::Failure.new(:failure) }
       },
-      extension: Kwork::Extensions::ROM.curry[rom, :default]
+      extension: Kwork::Extensions::ROM[rom, :default]
     )
 
     instance.transaction do |e|

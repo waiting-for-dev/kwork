@@ -17,6 +17,6 @@ module Kwork
         raise t.rollback! unless result.success?
       end
       result
-    end
+    end.curry
   end
 end
