@@ -30,9 +30,7 @@ And then execute:
 require "kwork"
 
 class AddUser
-  include Kwork[
-    operations: [:create_user, :build_email]
-  ]
+  include Kwork
 
   def call
     transaction do |t|
@@ -79,12 +77,7 @@ Imagine that the `#create_user` method failed instead:
 require "kwork"
 
 class AddUser
-  include Kwork[
-    operations: [
-      :create_user,
-      :build_email
-    ]
-  ]
+  include Kwork
 
   def call
     transaction do |t|
@@ -132,10 +125,6 @@ require "kwork"
 
 class AddUser
   include Kwork[
-    operations: [
-      :create_user,
-      :build_email
-    ],
     adapter: :result
   ]
 
@@ -175,10 +164,6 @@ require "kwork"
 
 class AddUser
   include Kwork[
-    operations: [
-      :create_user,
-      :build_email
-    ],
     adapter: :maybe
   ]
 
@@ -219,7 +204,6 @@ end
 
 class AddUser
   include Kwork[
-    operations: [:create_user, :build_email],
     adapter: MyAdapter
   ]
   # ...
@@ -242,7 +226,6 @@ rom = # ROM container
 
 class AddUser
   include Kwork[
-    operations: [:create_user, :build_email],
     extension: Kwork::Extensions::ROM[rom, :default] # :default is the name of the gateway
   ]
   # ...
@@ -259,7 +242,6 @@ require "kwork/extensions/active_record"
 
 class AddUser
   include Kwork[
-    operations: [:create_user, :build_email],
     extension: Kwork::Extensions::ActiveRecord
   ]
   # ...
@@ -281,7 +263,6 @@ end
 
 class AddUser
   include Kwork[
-    operations: [:create_user, :build_email],
     extension: MyExtension
   ]
   # ...
@@ -307,10 +288,18 @@ end
 
 class AddUser
   include Kwork[
-    operations: [:create_user, :build_email],
     profiler: Profiler
   ]
+  
   # ...
+  
+  def create_user
+    # ...
+  end
+  
+  def build_email(user)
+    # ...
+  end
 end
 
 AddUser.new.()
@@ -318,19 +307,6 @@ AddUser.new.()
 # => build_email:   0.000009   0.000000   0.000009 (  0.000008)
 # => Hello Alice!
 # => 
-```
-
-### Injecting operations
-
-You can inject operations different than the ones defined in the transaction on initialization. That's very useful for testing purposes:
-
-```ruby
-AddUser.new(
-  operations: {
-    # Avoiding database call
-    create_user: -> { success(Struct.new(:id, :name).new(1, "Alice")) },
-  }
-).()
 ```
 
 ### Decoupling operations
@@ -345,11 +321,12 @@ require "kwork"
 class AddUser
   include Import["operations.create_user", "operations.build_email"]
   
-  include Kwork[
-    operations: [:create_user, :build_email]
-  ]
-
-  # ...
+  def call
+    transaction do |t|
+      user = t.create_user
+      t.build_email(user)
+    end
+  end
 end
 ```
 

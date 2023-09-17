@@ -16,35 +16,57 @@ RSpec.describe "Kwork::Extensions::ROM" do
   end
 
   it "rolls transaction back on failure" do
-    instance = Kwork::Transaction.new(
-      operations: {
-        create_record: -> { Kwork::Result.pure(rom.relations[:foo].command(:create).(bar: "bar")) },
-        fail: -> { Kwork::Result::Failure.new(:failure) }
-      },
-      extension: Kwork::Extensions::ROM[rom, :default]
-    )
+    instance = Class.new(Kwork::Transaction) do
+      def initialize(rom:, **kwargs)
+        @rom = rom
+        super(**kwargs)
+      end
 
-    instance.transaction do |e|
-      e.create_record
-      e.fail
-    end
+      def call
+        transaction do |e|
+          e.create_record
+          e.fail
+        end
+      end
+
+      def create_record
+        Kwork::Result.pure(@rom.relations[:foo].command(:create).(bar: "bar"))
+      end
+
+      def fail
+        Kwork::Result::Failure.new(:failure)
+      end
+    end.new(rom:, extension: Kwork::Extensions::ROM[rom, :default])
+
+    instance.()
 
     expect(rom.relations[:foo].count).to be(0)
   end
 
   it "returns the callback result" do
-    instance = Kwork::Transaction.new(
-      operations: {
-        create_record: -> { Kwork::Result.pure(rom.relations[:foo].command(:create).(bar: "bar")) },
-        count: -> { Kwork::Result.pure(rom.relations[:foo].count) }
-      },
-      extension: Kwork::Extensions::ROM.curry[rom, :default]
-    )
+    instance = Class.new(Kwork::Transaction) do
+      def initialize(rom:, **kwargs)
+        @rom = rom
+        super(**kwargs)
+      end
 
-    result = instance.transaction do |e|
-      e.create_record
-      e.count
-    end
+      def call
+        transaction do |e|
+          e.create_record
+          e.count
+        end
+      end
+
+      def create_record
+        Kwork::Result.pure(@rom.relations[:foo].command(:create).(bar: "bar"))
+      end
+
+      def count
+        Kwork::Result.pure(@rom.relations[:foo].count)
+      end
+    end.new(rom:, extension: Kwork::Extensions::ROM[rom, :default])
+
+    result = instance.()
 
     expect(result).to eq(Kwork::Result.pure(1))
   end

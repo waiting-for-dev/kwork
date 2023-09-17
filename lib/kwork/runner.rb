@@ -5,16 +5,16 @@ require "kwork/result"
 module Kwork
   # @api private
   class Runner
-    attr_reader :operations, :adapter, :profiler
+    attr_reader :instance, :adapter, :profiler
 
-    def initialize(operations:, adapter:, profiler:)
-      @operations = operations
+    def initialize(instance:, adapter:, profiler:)
+      @instance = instance
       @adapter = adapter
       @profiler = profiler
     end
 
     def __call(name, *args, **kwargs, &block)
-      callback = -> { @operations[name].(*args, **kwargs, &block) }
+      callback = -> { @instance.method(name).(*args, **kwargs, &block) }
       result = @adapter.to_kwork_result(
         @profiler.(callback, name, args, kwargs, block)
       )
@@ -27,11 +27,11 @@ module Kwork
     end
 
     def method_missing(name, ...)
-      @operations.key?(name) ? __call(name, ...) : super
+      @instance.method(name) ? __call(name, ...) : super
     end
 
     def respond_to_missing?(name, include_all)
-      @operations.key?(name) || super
+      @instance.key?(name) || super
     end
   end
 end

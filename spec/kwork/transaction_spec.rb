@@ -10,53 +10,71 @@ RSpec.describe Kwork::Transaction do
     context "with #{adapter} adapter" do
       describe "#transaction" do
         it "chains successful operations, unwrapping intermediate results" do
-          instance = described_class.new(
-            operations: {
-              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
-              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
-            },
-            adapter:
-          )
+          instance = Class.new(described_class) do
+            def call
+              transaction do |r|
+                x = r.add_one(1)
+                r.add_two(x)
+              end
+            end
 
-          instance.transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end => [value]
+            def add_one(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+            end
+
+            def add_two(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+            end
+          end.new(adapter:)
+
+          instance.() => [value]
 
           expect(value).to be(4)
         end
 
         it "stops chaining on failure, returning last result" do
-          instance = described_class.new(
-            operations: {
-              add_one: ->(_x) { adapter.from_kwork_result(Kwork::Result::Failure.new(:failure)) },
-              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
-            },
-            adapter:
-          )
+          instance = Class.new(described_class) do
+            def call
+              transaction do |r|
+                r.add_one(1)
+                raise "error"
+              end
+            end
 
-          result = instance.transaction do |r|
-            r.add_one(1)
-            raise "error"
-          end
+            def add_one(_x)
+              @runner.adapter.from_kwork_result(Kwork::Result::Failure.new(:failure))
+            end
+
+            def add_two(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+            end
+          end.new(adapter:)
+
+          result = instance.()
 
           expect(adapter.to_kwork_result(result)).to be_a(Kwork::Result::Failure)
         end
 
         it "doesn't require all calls within the block to return a result" do
-          instance = described_class.new(
-            operations: {
-              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
-              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
-            },
-            adapter:
-          )
+          instance = Class.new(described_class) do
+            def call
+              transaction do |r|
+                x = r.add_one(1)
+                y = x + 1
+                r.add_two(y)
+              end
+            end
 
-          instance.transaction do |r|
-            x = r.add_one(1)
-            y = x + 1
-            r.add_two(y)
-          end => [value]
+            def add_one(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+            end
+
+            def add_two(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+            end
+          end.new(adapter:)
+
+          instance.() => [value]
 
           expect(value).to be(5)
         end
@@ -69,19 +87,24 @@ RSpec.describe Kwork::Transaction do
             end
           end.new
 
-          instance = described_class.new(
-            operations: {
-              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) },
-              add_two: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 2)) }
-            },
-            extension:,
-            adapter:
-          )
+          instance = Class.new(described_class) do
+            def call
+              transaction do |r|
+                x = r.add_one(1)
+                r.add_two(x)
+              end
+            end
 
-          instance.transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end => [value]
+            def add_one(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+            end
+
+            def add_two(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+            end
+          end.new(adapter:, extension:)
+
+          instance.() => [value]
 
           expect(value).to be(5)
         end
@@ -93,17 +116,19 @@ RSpec.describe Kwork::Transaction do
             callback.()
           end
 
-          instance = described_class.new(
-            operations: {
-              add_one: ->(x) { adapter.from_kwork_result(Kwork::Result.pure(x + 1)) }
-            },
-            adapter:,
-            profiler:
-          )
+          instance = Class.new(described_class) do
+            def call
+              transaction do |r|
+                r.add_one(1)
+              end
+            end
 
-          instance.transaction do |r|
-            r.add_one(1)
-          end => [value]
+            def add_one(x)
+              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+            end
+          end.new(adapter:, profiler:)
+
+          instance.() => [value]
 
           aggregate_failures do
             expect(profile.first).to eq("add_one called with 1")
@@ -116,73 +141,5 @@ RSpec.describe Kwork::Transaction do
 
   Kwork::Adapters::Registry.new.adapters.each do |adapter|
     include_examples "transaction", adapter
-  end
-
-  describe "#merge_operations" do
-    it "returns a new instance" do
-      instance = described_class.new(
-        operations: {
-          add: ->(x) { Kwork::Result.pure(x + 1) }
-        }
-      )
-
-      new_instance = instance.merge_operations
-
-      expect(instance).not_to be(new_instance)
-    end
-
-    it "merge given operations" do
-      instance = described_class.new(
-        operations: {
-          add: ->(x) { Kwork::Result.pure(x + 1) }
-        }
-      )
-
-      new_instance = instance.merge_operations(add: ->(x) { Kwork::Result.pure(x + 2) })
-
-      new_instance.transaction do |r|
-        r.add(1)
-      end => [value]
-      expect(value).to be(3)
-    end
-
-    it "keeps the adapter" do
-      instance = described_class.new(
-        operations: {
-          add: ->(x) { Kwork::Result.pure(x + 1) }
-        },
-        adapter: Object
-      )
-
-      new_instance = instance.merge_operations
-
-      expect(new_instance.runner.adapter).to be(Object)
-    end
-
-    it "keeps the extension" do
-      instance = described_class.new(
-        operations: {
-          add: ->(x) { Kwork::Result.pure(x + 1) }
-        },
-        extension: Object
-      )
-
-      new_instance = instance.merge_operations
-
-      expect(new_instance.extension).to be(Object)
-    end
-
-    it "keeps the profiler" do
-      instance = described_class.new(
-        operations: {
-          add: ->(x) { Kwork::Result.pure(x + 1) }
-        },
-        profiler: Object
-      )
-
-      new_instance = instance.merge_operations
-
-      expect(new_instance.runner.profiler).to be(Object)
-    end
   end
 end

@@ -17,9 +17,8 @@ module Kwork
     attr_reader :runner,
                 :extension
 
-    # @param operations [Hash{Symbol => #call}] Map of names and callables returning a result type
     # @param adapter [#from_kwork_result, #from_kwork_result] Adapter for the
-    #   result type returned by the given operations. See {Kwork::Adapters}.
+    #   result type returned by the passed operations. See {Kwork::Adapters}.
     # @param profiler [#call] Profiler wrapping every operation. It takes the following arguments:
     #   - {Proc}: A callback wrapping the execution of an operation. Its result
     #   needs to be returned by the profiler.
@@ -31,11 +30,10 @@ module Kwork
     #   callback which represents the raw transaction. Its result needs to be
     #   returned.
     def initialize(
-      operations:,
       adapter: Adapters::Kwork,
       profiler: NULL_PROFILER,
       extension: NULL_EXTENSION,
-      runner: Runner.new(operations:, adapter:, profiler:)
+      runner: Runner.new(instance: self, adapter:, profiler:)
     )
       @runner = runner
       @extension = extension
@@ -51,22 +49,6 @@ module Kwork
       result = @extension.(callback(block))
 
       @runner.adapter.from_kwork_result(result)
-    end
-
-    # Merges given operations
-    #
-    # It returns a new instance with the new operations merged.
-    #
-    # @param operations [#call] List of callables returning a result type
-    def merge_operations(**operations)
-      new_operations = @runner.operations.merge(operations)
-
-      self.class.new(
-        operations: new_operations,
-        adapter: @runner.adapter,
-        extension: @extension,
-        profiler: @runner.profiler
-      )
     end
 
     private

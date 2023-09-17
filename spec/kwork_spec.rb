@@ -13,57 +13,7 @@ RSpec.describe Kwork do
   context "when included" do
     it "transparently delegates to a transaction instance" do
       klass = Class.new do
-        include Kwork[
-          operations: {
-            add_one: ->(x) { Kwork::Result.pure(x + 1) },
-            add_two: ->(x) { Kwork::Result.pure(x + 2) }
-          }
-        ]
-
-        def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end
-        end
-      end
-
-      klass.new.() => [value]
-
-      expect(value).to be(4)
-    end
-
-    it "can inject operations on initialization" do
-      klass = Class.new do
-        include Kwork[
-          operations: {
-            add_one: ->(x) { Kwork::Result.pure(x + 1) },
-            add_two: ->(x) { Kwork::Result.pure(x + 2) }
-          }
-        ]
-
-        def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end
-        end
-      end
-      add_three = ->(x) { Kwork::Result.pure(x + 3) }
-
-      klass.new(operations: { add_two: add_three }).() => [value]
-
-      expect(value).to be(5)
-    end
-
-    it "can use own methods as operations when given as symbols" do
-      klass = Class.new do
-        include Kwork[
-          operations: {
-            add_one: :add_one,
-            add_two: ->(x) { Kwork::Result.pure(x + 2) }
-          }
-        ]
+        include Kwork
 
         def call
           transaction do |r|
@@ -72,39 +22,12 @@ RSpec.describe Kwork do
           end
         end
 
-        private
-
-        def add_one(value)
-          Kwork::Result.pure(value + 1)
-        end
-      end
-
-      klass.new.() => [value]
-
-      expect(value).to be(4)
-    end
-
-    it "can take all operations from methods when given as an array of symbols" do
-      klass = Class.new do
-        include Kwork[
-          operations: %i[add_one add_two]
-        ]
-
-        def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
-          end
+        def add_one(x)
+          Kwork::Result.pure(x + 1)
         end
 
-        private
-
-        def add_one(value)
-          Kwork::Result.pure(value + 1)
-        end
-
-        def add_two(value)
-          Kwork::Result.pure(value + 2)
+        def add_two(x)
+          Kwork::Result.pure(x + 2)
         end
       end
 
@@ -116,10 +39,6 @@ RSpec.describe Kwork do
     it "can take the adapter as a symbol" do
       klass = Class.new do
         include Kwork[
-          operations: {
-            add_one: ->(x) { Dry::Monads::Result.pure(x + 1) },
-            add_two: ->(x) { Dry::Monads::Result.pure(x + 2) }
-          },
           adapter: :result
         ]
 
@@ -129,6 +48,14 @@ RSpec.describe Kwork do
             r.add_two(x)
           end
         end
+
+        def add_one(x)
+          Dry::Monads::Result.pure(x + 1)
+        end
+
+        def add_two(x)
+          Dry::Monads::Result.pure(x + 2)
+        end
       end
 
       klass.new.() => [value]
@@ -137,13 +64,13 @@ RSpec.describe Kwork do
     end
 
     it "can specify extension" do
+      run = false
       klass = Class.new do
         include Kwork[
-          operations: {
-            add_one: ->(x) { Kwork::Result.pure(x + 1) },
-            add_two: ->(x) { Kwork::Result.pure(x + 2) }
-          },
-          extension: Kwork::Extensions::ActiveRecord
+          extension: lambda { |callback|
+                       run = true
+                       callback.()
+                     }
         ]
 
         def call
@@ -152,11 +79,22 @@ RSpec.describe Kwork do
             r.add_two(x)
           end
         end
+
+        def add_one(x)
+          Kwork::Result.pure(x + 1)
+        end
+
+        def add_two(x)
+          Kwork::Result.pure(x + 2)
+        end
       end
 
       klass.new.() => [value]
 
-      expect(value).to be(4)
+      aggregate_failures do
+        expect(value).to be(4)
+        expect(run).to be(true)
+      end
     end
 
     it "can specify profiler" do
@@ -168,9 +106,6 @@ RSpec.describe Kwork do
 
       klass = Class.new do
         include Kwork[
-          operations: {
-            add_one: ->(x) { Kwork::Result.pure(x + 1) }
-          },
           profiler: KworkProfiler
         ]
 
@@ -178,6 +113,10 @@ RSpec.describe Kwork do
           transaction do |r|
             r.add_one(1)
           end
+        end
+
+        def add_one(x)
+          Kwork::Result.pure(x + 1)
         end
       end
 
@@ -193,7 +132,6 @@ RSpec.describe Kwork do
       it "wraps in a success result" do
         klass = Class.new do
           include Kwork[
-            operations: {},
             adapter: Kwork::Adapters::DryMonads::Result
           ]
         end
@@ -206,7 +144,6 @@ RSpec.describe Kwork do
       it "wraps in a failure result" do
         klass = Class.new do
           include Kwork[
-            operations: {},
             adapter: Kwork::Adapters::DryMonads::Result
           ]
         end

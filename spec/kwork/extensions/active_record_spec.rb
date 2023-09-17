@@ -24,35 +24,47 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
   after { Foo.delete_all }
 
   it "rolls transaction back on failure" do
-    instance = Kwork::Transaction.new(
-      operations: {
-        create_record: -> { Kwork::Result.pure(Foo.create(bar: "bar")) },
-        fail: -> { Kwork::Result::Failure.new(:failure) }
-      },
-      extension: Kwork::Extensions::ActiveRecord
-    )
+    instance = Class.new(Kwork::Transaction) do
+      def call
+        transaction do |e|
+          e.create_record
+          e.fail
+        end
+      end
 
-    instance.transaction do |e|
-      e.create_record
-      e.fail
-    end
+      def create_record
+        Kwork::Result.pure(Foo.create(bar: "bar"))
+      end
+
+      def fail
+        Kwork::Result::Failure.new(:failure)
+      end
+    end.new(extension: Kwork::Extensions::ActiveRecord)
+
+    instance.()
 
     expect(Foo.count).to be(0)
   end
 
   it "returns the callback result" do
-    instance = Kwork::Transaction.new(
-      operations: {
-        create_record: -> { Kwork::Result.pure(Foo.create(bar: "bar")) },
-        count: -> { Kwork::Result.pure(Foo.count) }
-      },
-      extension: Kwork::Extensions::ActiveRecord
-    )
+    instance = Class.new(Kwork::Transaction) do
+      def call
+        transaction do |e|
+          e.create_record
+          e.count
+        end
+      end
 
-    result = instance.transaction do |e|
-      e.create_record
-      e.count
-    end
+      def create_record
+        Kwork::Result.pure(Foo.create(bar: "bar"))
+      end
+
+      def count
+        Kwork::Result.pure(Foo.count)
+      end
+    end.new(extension: Kwork::Extensions::ActiveRecord)
+
+    result = instance.()
 
     expect(result).to eq(Kwork::Result.pure(1))
   end
