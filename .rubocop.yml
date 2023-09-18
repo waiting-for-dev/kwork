@@ -1,6 +1,6 @@
 AllCops:
   NewCops: enable
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.2
 
 Style/StringLiterals:
   Enabled: true
@@ -11,6 +11,10 @@ Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
 
 Style/SingleLineMethods:
+  Exclude:
+    - spec/**/*
+
+Style/BlockDelimiters:
   Exclude:
     - spec/**/*
 

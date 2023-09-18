@@ -269,46 +269,6 @@ class AddUser
 end
 ```
 
-### Profiling
-
-Kwork transactions can be profiled to get information about the execution of each operation. To create a profiler, you need to build a callable taking, in this order, the operation callback, the operation name, and the operation args, kwargs & block. For instance, this is how we can measure the time ellapsed by each operation:
-
-```ruby
-require "kwork"
-require "benchmark"
-
-Profiler = lambda do |callback, name, _args, _kwargs, _block|
-  result = nil
-  benchmark = Benchmark.measure do
-    result = callback.()
-  end
-  puts "#{name}: #{benchmark}"
-  result
-end
-
-class AddUser
-  include Kwork[
-    profiler: Profiler
-  ]
-  
-  # ...
-  
-  def create_user
-    # ...
-  end
-  
-  def build_email(user)
-    # ...
-  end
-end
-
-AddUser.new.()
-# => create_user:   0.000040   0.000007   0.000047 (  0.000041)
-# => build_email:   0.000009   0.000000   0.000009 (  0.000008)
-# => Hello Alice!
-# => 
-```
-
 ### Decoupling operations
 
 It's a good practice to decouple operations from the transaction test for

@@ -19,11 +19,11 @@ RSpec.describe Kwork::Transaction do
             end
 
             def add_one(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 1))
             end
 
             def add_two(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 2))
             end
           end.new(adapter:)
 
@@ -42,11 +42,11 @@ RSpec.describe Kwork::Transaction do
             end
 
             def add_one(_x)
-              @runner.adapter.from_kwork_result(Kwork::Result::Failure.new(:failure))
+              @adapter.from_kwork_result(Kwork::Result::Failure.new(:failure))
             end
 
             def add_two(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 2))
             end
           end.new(adapter:)
 
@@ -66,11 +66,11 @@ RSpec.describe Kwork::Transaction do
             end
 
             def add_one(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 1))
             end
 
             def add_two(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 2))
             end
           end.new(adapter:)
 
@@ -96,11 +96,11 @@ RSpec.describe Kwork::Transaction do
             end
 
             def add_one(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 1))
             end
 
             def add_two(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 2))
+              @adapter.from_kwork_result(Kwork::Result.pure(x + 2))
             end
           end.new(adapter:, extension:)
 
@@ -108,38 +108,27 @@ RSpec.describe Kwork::Transaction do
 
           expect(value).to be(5)
         end
-
-        it "can run operations with provided profiler" do
-          profile = []
-          profiler = lambda do |callback, name, args, _kwargs, _block|
-            profile << "#{name} called with #{args[0]}"
-            callback.()
-          end
-
-          instance = Class.new(described_class) do
-            def call
-              transaction do
-                step add_one(1)
-              end
-            end
-
-            def add_one(x)
-              @runner.adapter.from_kwork_result(Kwork::Result.pure(x + 1))
-            end
-          end.new(adapter:, profiler:)
-
-          instance.() => [value]
-
-          aggregate_failures do
-            expect(profile.first).to eq("add_one called with 1")
-            expect(value).to be(2)
-          end
-        end
       end
     end
   end
 
   Kwork::Adapters::Registry.new.adapters.each do |adapter|
     include_examples "transaction", adapter
+  end
+
+  describe "#step" do
+    it "returns wrapped value" do
+      expect(
+        described_class.new.step(Kwork::Result.pure(2))
+      ).to be(2)
+    end
+
+    it "throws :halt with the failure" do
+      failure = Kwork::Result::Failure.new(:foo)
+
+      expect {
+        described_class.new.step(failure)
+      }.to throw_symbol(:halt, failure)
+    end
   end
 end

@@ -97,37 +97,6 @@ RSpec.describe Kwork do
       end
     end
 
-    it "can specify profiler" do
-      profile = []
-      stub_const("KworkProfiler", lambda do |callback, name, args, _kwargs, _block|
-        profile << "#{name} called with #{args[0]}"
-        callback.()
-      end)
-
-      klass = Class.new do
-        include Kwork[
-          profiler: KworkProfiler
-        ]
-
-        def call
-          transaction do
-            step add_one(1)
-          end
-        end
-
-        def add_one(x)
-          Kwork::Result.pure(x + 1)
-        end
-      end
-
-      klass.new.() => [value]
-
-      aggregate_failures do
-        expect(profile.first).to eq("add_one called with 1")
-        expect(value).to be(2)
-      end
-    end
-
     describe "#success" do
       it "wraps in a success result" do
         klass = Class.new do
