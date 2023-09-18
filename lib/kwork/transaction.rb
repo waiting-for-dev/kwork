@@ -57,7 +57,7 @@ module Kwork
       lambda do
         catch(:halt) do
           Kwork::Result.pure(
-            block.(@runner)
+            @runner.instance_eval(&block)
           )
         end
       end

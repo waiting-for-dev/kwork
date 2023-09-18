@@ -13,17 +13,20 @@ module Kwork
       @profiler = profiler
     end
 
-    def __call(name, *args, **kwargs, &block)
-      callback = -> { @instance.method(name).(*args, **kwargs, &block) }
-      result = @adapter.to_kwork_result(
-        @profiler.(callback, name, args, kwargs, block)
-      )
+    def step(result)
       case result
       in Kwork::Result::Success[value]
         value
       in Kwork::Result::Failure
         throw :halt, result
       end
+    end
+
+    def __call(name, *args, **kwargs, &block)
+      callback = -> { @instance.method(name).(*args, **kwargs, &block) }
+      @adapter.to_kwork_result(
+        @profiler.(callback, name, args, kwargs, block)
+      )
     end
 
     def method_missing(name, ...)

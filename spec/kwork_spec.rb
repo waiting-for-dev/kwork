@@ -16,9 +16,9 @@ RSpec.describe Kwork do
         include Kwork
 
         def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
+          transaction do
+            x = step add_one(1)
+            step add_two(x)
           end
         end
 
@@ -43,9 +43,9 @@ RSpec.describe Kwork do
         ]
 
         def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
+          transaction do
+            x = step add_one(1)
+            step add_two(x)
           end
         end
 
@@ -74,9 +74,9 @@ RSpec.describe Kwork do
         ]
 
         def call
-          transaction do |r|
-            x = r.add_one(1)
-            r.add_two(x)
+          transaction do
+            x = step add_one(1)
+            step add_two(x)
           end
         end
 
@@ -110,8 +110,8 @@ RSpec.describe Kwork do
         ]
 
         def call
-          transaction do |r|
-            r.add_one(1)
+          transaction do
+            step add_one(1)
           end
         end
 

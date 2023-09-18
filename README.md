@@ -33,9 +33,9 @@ class AddUser
   include Kwork
 
   def call
-    transaction do |t|
-      user = t.create_user
-      t.build_email(user)
+    transaction do
+      user = step create_user
+      step build_email(user)
     end
   end
 
@@ -80,9 +80,9 @@ class AddUser
   include Kwork
 
   def call
-    transaction do |t|
-      user = t.create_user
-      t.build_email(user)
+    transaction do
+      user = step create_user
+      step build_email(user)
     end
   end
 
@@ -129,9 +129,9 @@ class AddUser
   ]
 
   def call
-    transaction do |t|
-      user = t.create_user
-      t.build_email(user)
+    transaction do
+      user = step create_user
+      step build_email(user)
     end
   end
 
@@ -168,9 +168,9 @@ class AddUser
   ]
 
   def call
-    transaction do |t|
-      user = t.create_user
-      t.build_email(user)
+    transaction do
+      user = step create_user
+      step build_email(user)
     end
   end
 
@@ -322,9 +322,9 @@ class AddUser
   include Import["operations.create_user", "operations.build_email"]
   
   def call
-    transaction do |t|
-      user = t.create_user
-      t.build_email(user)
+    transaction do
+      user = step create_user
+      step build_email(user)
     end
   end
 end

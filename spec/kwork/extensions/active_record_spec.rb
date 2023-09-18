@@ -26,9 +26,9 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
   it "rolls transaction back on failure" do
     instance = Class.new(Kwork::Transaction) do
       def call
-        transaction do |e|
-          e.create_record
-          e.fail
+        transaction do
+          step create_record
+          step failure
         end
       end
 
@@ -36,7 +36,7 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
         Kwork::Result.pure(Foo.create(bar: "bar"))
       end
 
-      def fail
+      def failure
         Kwork::Result::Failure.new(:failure)
       end
     end.new(extension: Kwork::Extensions::ActiveRecord)
@@ -49,9 +49,9 @@ RSpec.describe "Kwork::Extensions::ActiveRecord" do
   it "returns the callback result" do
     instance = Class.new(Kwork::Transaction) do
       def call
-        transaction do |e|
-          e.create_record
-          e.count
+        transaction do
+          step create_record
+          step count
         end
       end
 

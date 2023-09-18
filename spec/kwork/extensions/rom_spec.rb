@@ -23,9 +23,9 @@ RSpec.describe "Kwork::Extensions::ROM" do
       end
 
       def call
-        transaction do |e|
-          e.create_record
-          e.fail
+        transaction do
+          step create_record
+          step failure
         end
       end
 
@@ -33,7 +33,7 @@ RSpec.describe "Kwork::Extensions::ROM" do
         Kwork::Result.pure(@rom.relations[:foo].command(:create).(bar: "bar"))
       end
 
-      def fail
+      def failure
         Kwork::Result::Failure.new(:failure)
       end
     end.new(rom:, extension: Kwork::Extensions::ROM[rom, :default])
@@ -51,9 +51,9 @@ RSpec.describe "Kwork::Extensions::ROM" do
       end
 
       def call
-        transaction do |e|
-          e.create_record
-          e.count
+        transaction do
+          step create_record
+          step count
         end
       end
 

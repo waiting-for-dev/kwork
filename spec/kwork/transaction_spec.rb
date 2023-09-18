@@ -12,9 +12,9 @@ RSpec.describe Kwork::Transaction do
         it "chains successful operations, unwrapping intermediate results" do
           instance = Class.new(described_class) do
             def call
-              transaction do |r|
-                x = r.add_one(1)
-                r.add_two(x)
+              transaction do
+                x = step add_one(1)
+                step add_two(x)
               end
             end
 
@@ -35,8 +35,8 @@ RSpec.describe Kwork::Transaction do
         it "stops chaining on failure, returning last result" do
           instance = Class.new(described_class) do
             def call
-              transaction do |r|
-                r.add_one(1)
+              transaction do
+                step add_one(1)
                 raise "error"
               end
             end
@@ -58,10 +58,10 @@ RSpec.describe Kwork::Transaction do
         it "doesn't require all calls within the block to return a result" do
           instance = Class.new(described_class) do
             def call
-              transaction do |r|
-                x = r.add_one(1)
+              transaction do
+                x = step add_one(1)
                 y = x + 1
-                r.add_two(y)
+                step add_two(y)
               end
             end
 
@@ -89,9 +89,9 @@ RSpec.describe Kwork::Transaction do
 
           instance = Class.new(described_class) do
             def call
-              transaction do |r|
-                x = r.add_one(1)
-                r.add_two(x)
+              transaction do
+                x = step add_one(1)
+                step add_two(x)
               end
             end
 
@@ -118,8 +118,8 @@ RSpec.describe Kwork::Transaction do
 
           instance = Class.new(described_class) do
             def call
-              transaction do |r|
-                r.add_one(1)
+              transaction do
+                step add_one(1)
               end
             end
 
