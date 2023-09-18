@@ -261,6 +261,10 @@ class AddUser
 end
 ```
 
+### Using Transactable
+
+Through the `#pipe` method, you can use [transactable operations](https://alchemists.io/projects/transactable).
+
 ### Decoupling operations
 
 It's a good practice to decouple operations from the transaction test for

@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Atomic business transactions"
   spec.homepage = "https://github.com/nebulab/kwork"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.1"
+  spec.required_ruby_version = "~> 3.2"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
@@ -30,6 +30,8 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.add_dependency "transactable", "~> 0.6.0"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

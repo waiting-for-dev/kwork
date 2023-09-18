@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "kwork/adapters/registry"
+require "kwork/adapters/dry_monads/result"
 require "kwork/result"
 require "kwork/transaction"
 require "spec_helper"
 
 RSpec.describe Kwork::Transaction do
+  include Transactable
+
   shared_examples "transaction" do |adapter|
     context "with #{adapter} adapter" do
       describe "#transaction" do
@@ -129,6 +132,24 @@ RSpec.describe Kwork::Transaction do
       expect {
         described_class.new.step(failure)
       }.to throw_symbol(:halt, failure)
+    end
+  end
+
+  describe "#pipe" do
+    it "pipes through transactable and returns wrapped value" do
+      instance = described_class.new(adapter: Kwork::Adapters::DryMonads::Result)
+
+      expect(
+        instance.pipe({ a: 1 }, merge(b: 2))
+      ).to eq({ a: 1, b: 2 })
+    end
+
+    it "throws :halt with the failure" do
+      instance = described_class.new(adapter: Kwork::Adapters::DryMonads::Result)
+
+      expect {
+        instance.pipe(Dry::Monads::Result::Failure.new(:foo), fmap(&:to_s))
+      }.to throw_symbol(:halt, Kwork::Result::Failure.new(:foo))
     end
   end
 end

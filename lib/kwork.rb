@@ -54,6 +54,11 @@ module Kwork
         @_transaction.step(...)
       end
 
+      # see {Kwork::Transaction#pipe}
+      def pipe(...)
+        @_transaction.pipe(...)
+      end
+
       # Wraps a value in the success type for the used result adapter
       #
       # @param value [Object]
@@ -99,6 +104,7 @@ module Kwork
       klass.instance_variable_set(:@_extension, @extension)
       klass.instance_variable_set(:@_adapter_registry, @adapter_registry)
       klass.include(InstanceMethods)
+      klass.include(Transactable)
       klass.prepend(CallWrapper)
     end
   end

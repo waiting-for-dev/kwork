@@ -2,10 +2,13 @@
 
 require "kwork/result"
 require "kwork/adapters/kwork"
+require "transactable"
 
 module Kwork
   # Represents a transaction
   class Transaction
+    include Transactable
+
     # @api private
     NULL_EXTENSION = ->(callback) { callback.() }
 
@@ -49,6 +52,19 @@ module Kwork
       in Kwork::Result::Failure
         throw :halt, result
       end
+    end
+
+    # Acts according a pipe of {Transactable} operations
+    #
+    # When a failure is found, the transaction is halted and that one is
+    # returned.
+    #
+    # For now, it only works when using the Dry::Monads::Maybe adapter
+    #
+    # @params [<Any>] Transactable operations
+    # @return [Kwork::Result]
+    def pipe(...)
+      step super
     end
 
     private
