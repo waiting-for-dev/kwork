@@ -9,15 +9,13 @@ Kwork is a library for building business transactions in Ruby designed to:
   `Dry::Monads::Result`, `Dry::Monads::Maybe`...).
 - Provide transactional safety for different database adapters (e.g.,
   `ROM`, `ActiveRecord`...).
-- Provide profiling information for each step of the transaction.
-
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'kwork', github: 'nebulab/kwork'
+gem 'kwork', github: 'waiting-for-dev/kwork'
 ```
 
 And then execute:
@@ -26,179 +24,71 @@ And then execute:
 
 ## Usage
 
+Using [`dry-auto_inject`](https://dry-rb.org/gems/dry-auto_inject/1.0/) & [`dry-monads`](https://dry-rb.org/gems/dry-monads/1.6/).
+
 ```ruby
 require "kwork"
 
-class AddUser
-  include Kwork
-
-  def call
-    user = step create_user
-    step build_email(user)
+class CheckOutOrder
+  include Kwork[adapter: :result]
+  include Deps[:update_line_items, :update_order, :calculate_best_prices, :enqueue_order_completed_email]
+  
+  def call(order_id, attrs)
+    attrs = step validate(attrs)
+    line_items = step update_line_items.(order_id, attrs[:line_items])
+    order = step update_order.(order_id, attrs.except(:line_items))
+    
+    step calculate_best_prices.(order:, line_items:)
+    step enqueue_order_completed_email.(order)
+    
+    success(order)
   end
-
+  
   private
-
-  def create_user
-    success(
-      Struct.new(:id, :name).new(1, "Alice")
-    )
-  end
-
-  def build_email(user)
-    success(
-      "Hello #{user.name}!"
-    )
+  
+  def validate(attrs)
+    # ...
   end
 end
 
-case AddUser.new.()
-in Kwork::Result::Success[message]
+include Dry::Monads[:result]
+
+case CheckoutOrder.new
+in Success[message]
   puts message
-in Kwork::Result::Failure[error]
+in Failure[error]
   puts error
-end # => "Hello Alice!"
+end
 ```
 
-The key concept to understand is how successful operations are chained. The
-`#create_user` method above returns a user instance wrapped within a
-`Kwork::Result::Success` type. However, when the operation is run within the
-block, the result is unwrapped and the user instance is passed as an argument to
-the `#build_email` method.
+### Advanced usage
 
-When we execute the transaction, we pattern match on the result type and
-extract the final result of the whole transaction.
-
-Imagine that the `#create_user` method failed instead:
+You can leverage [transactable](https://alchemists.io/projects/transactable) to elegantly use the Railway pattern for data transformation or the whole transactional workflow. For now, it only works with `Dry::Monads::Result` adapter:
 
 ```ruby
-require "kwork"
+class CreateUser
+  include Kwork[adapter: :result]
+  include Deps["user_repo", "validate_user"]
+  include Dry::Monads[:result]
+  
+  DEFAULT_USER_ATTRS = {
+    country: :us,
+    currency: :usd
+  }
 
-class AddUser
-  include Kwork
+  def call(user_attrs)
+    user = pipe user_attrs,
+      merge(DEFAULT_USER_ATTRS),
+      method(:validate_user)
 
-  def call
-    user = step create_user
-    step build_email(user)
+    step create_user(user)
   end
 
   private
 
-  def create_user
-    failure(
-      "User already exists!"
-    )
+  def create_user(user)
+    Success(user_repo.create(user))
   end
-
-  def build_email(user)
-    success(
-      "Hello #{user.name}!"
-    )
-  end
-end
-
-case AddUser.new.()
-in Kwork::Result::Success[message]
-  puts message
-in Kwork::Result::Failure[error]
-  puts error
-end # => "User already exists!"
-```
-
-Notice how the transaction was short-circuited and the `#build_email` method
-was never called.
-
-### Result adapters
-
-Kwork transactions can work with any result type as long as an adapter is available. By default, it'll use a [`Kwork::Result`](lib/kwork/result.rb), which already provides a lot of features to access and transform the wrapped values. However, others adapters are shipped OOTB and you can also create your own.
-
-#### dry-monad's result type
-
-You need to add [dry-monads](https://dry-rb.org/gems/dry-monads/1.6/) to your `Gemfile` to use it:
-
-```ruby
-require "kwork"
-
-class AddUser
-  include Kwork[
-    adapter: :result
-  ]
-
-  def call
-    user = step create_user
-    step build_email(user)
-  end
-
-  private
-
-  def create_user
-    success(
-      Struct.new(:id, :name).new(1, "Alice")
-    )
-  end
-
-  def build_email(user)
-    success(
-      "Hello #{user.name}!"
-    )
-  end
-end
-
-result = AddUser.new.()
-puts result.class #=> Dry::Monads::Result::Success
-puts result.value! #=> "Hello Alice!"
-```
-
-#### dry-monad's maybe type
-
-You need to add [dry-monads](https://dry-rb.org/gems/dry-monads/1.6/) to your `Gemfile` to use it:
-
-```ruby
-require "kwork"
-
-class AddUser
-  include Kwork[
-    adapter: :maybe
-  ]
-
-  def call
-    user = step create_user
-    step build_email(user)
-  end
-
-  private
-
-  def create_user
-    failure(
-      "User already exists!"
-    )
-  end
-
-  def build_email(user)
-    success(
-      "Hello #{user.name}!"
-    )
-  end
-end
-
-result = AddUser.new.()
-puts result.class #=> Dry::Monads::Maybe::None
-```
-
-#### Custom adapters
-
-A custom adapter can be very easily created. You only need to provide an interface responding to both `#from_kwork_result` and `#to_kwork_result`. Take a look at how [the ones for dry-monads](lib/kwork/adapters/dry_monads/) are implemented for inspiration.
-
-```ruby
-module MyAdapter
-  # ...
-end
-
-class AddUser
-  include Kwork[
-    adapter: MyAdapter
-  ]
-  # ...
 end
 ```
 
@@ -258,29 +148,6 @@ class AddUser
     extension: MyExtension
   ]
   # ...
-end
-```
-
-### Using Transactable
-
-Through the `#pipe` method, you can use [transactable operations](https://alchemists.io/projects/transactable).
-
-### Decoupling operations
-
-It's a good practice to decouple operations from the transaction test for
-better reusability and testing. That plays very well with dependency injection
-of operations in the [dry-rb](https://dry-rb.org/) ecosystem:
-
-```ruby
-require "kwork"
-
-class AddUser
-  include Import["operations.create_user", "operations.build_email"]
-  
-  def call
-    user = step create_user
-    step build_email(user)
-  end
 end
 ```
 
