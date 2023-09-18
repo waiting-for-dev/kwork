@@ -77,6 +77,13 @@ module Kwork
       end
     end
 
+    # Automatically wrap call within `#transaction`
+    module CallWrapper
+      def call(...)
+        transaction { super }
+      end
+    end
+
     include InstanceMethods
 
     # rubocop:disable Lint/MissingSuper
@@ -92,6 +99,7 @@ module Kwork
       klass.instance_variable_set(:@_extension, @extension)
       klass.instance_variable_set(:@_adapter_registry, @adapter_registry)
       klass.include(InstanceMethods)
+      klass.prepend(CallWrapper)
     end
   end
 end

@@ -16,10 +16,8 @@ RSpec.describe Kwork do
         include Kwork
 
         def call
-          transaction do
-            x = step add_one(1)
-            step add_two(x)
-          end
+          x = step add_one(1)
+          step add_two(x)
         end
 
         def add_one(x)
@@ -43,10 +41,8 @@ RSpec.describe Kwork do
         ]
 
         def call
-          transaction do
-            x = step add_one(1)
-            step add_two(x)
-          end
+          x = step add_one(1)
+          step add_two(x)
         end
 
         def add_one(x)
@@ -74,10 +70,8 @@ RSpec.describe Kwork do
         ]
 
         def call
-          transaction do
-            x = step add_one(1)
-            step add_two(x)
-          end
+          x = step add_one(1)
+          step add_two(x)
         end
 
         def add_one(x)
@@ -95,6 +89,29 @@ RSpec.describe Kwork do
         expect(value).to be(4)
         expect(run).to be(true)
       end
+    end
+
+    it "can pass arguments to call" do
+      klass = Class.new do
+        include Kwork
+
+        def call(x)
+          y = step add_one(x)
+          step add_two(y)
+        end
+
+        def add_one(x)
+          Kwork::Result.pure(x + 1)
+        end
+
+        def add_two(x)
+          Kwork::Result.pure(x + 2)
+        end
+      end
+
+      klass.new.(1) => [value]
+
+      expect(value).to be(4)
     end
 
     describe "#success" do
