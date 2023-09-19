@@ -103,9 +103,9 @@ module Kwork
       klass.instance_variable_set(:@_adapter, @adapter)
       klass.instance_variable_set(:@_extension, @extension)
       klass.instance_variable_set(:@_adapter_registry, @adapter_registry)
-      klass.include(InstanceMethods)
       klass.include(Transactable)
       klass.prepend(CallWrapper)
+      klass.include(InstanceMethods)
     end
   end
 end
